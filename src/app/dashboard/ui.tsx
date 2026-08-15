@@ -1,0 +1,498 @@
+"use client";
+import { useEffect, useRef, useState } from "react";
+import { Copy, Moon, Sun, Trash2 } from "lucide-react";
+type Project = {
+  id: string;
+  publicId: string;
+  slug: string | null;
+  name: string;
+  description: string | null;
+  visibility: string;
+  _count: { endpoints: number; logs: number };
+};
+type Endpoint = {
+  id: string;
+  name: string;
+  method: string;
+  path: string;
+  statusCode: number;
+  responseBody: unknown;
+};
+const methodStyle: Record<string, string> = {
+  GET: "bg-emerald-500/15 text-emerald-300",
+  POST: "bg-sky-500/15 text-sky-300",
+  PUT: "bg-amber-500/15 text-amber-300",
+  PATCH: "bg-violet-500/15 text-violet-300",
+  DELETE: "bg-red-500/15 text-red-300",
+};
+function resourceName(path: string) {
+  return path.split("/").filter(Boolean)[0]?.replace(/[-_]/g, " ") ?? "root";
+}
+export default function Dashboard({ username }: { username: string }) {
+  const [projects, setProjects] = useState<Project[]>([]),
+    [name, setName] = useState(""),
+    [selected, setSelected] = useState<Project | null>(null),
+    [endpoints, setEndpoints] = useState<Endpoint[]>([]),
+    [resource, setResource] = useState<string | null>(null),
+    [method, setMethod] = useState<string | null>(null),
+    [selectedEndpoint, setSelectedEndpoint] = useState<Endpoint | null>(null),
+    [message, setMessage] = useState(""),
+    [theme, setTheme] = useState<"dark" | "light">("dark"),
+    [scrolled, setScrolled] = useState(false),
+    [deleteTarget, setDeleteTarget] = useState<Project | null>(null),
+    [showTop, setShowTop] = useState(false);
+  const responseRef = useRef<HTMLTextAreaElement>(null);
+  const load = async () => {
+    const response = await fetch("/api/projects");
+    setProjects(await response.json());
+  };
+  useEffect(() => {
+    void load();
+  }, []);
+  useEffect(() => {
+    const onScroll = () => {
+      setScrolled(window.scrollY > 12);
+      setShowTop(window.scrollY > 100);
+    };
+    window.addEventListener("scroll", onScroll, { passive: true });
+    onScroll();
+    return () => window.removeEventListener("scroll", onScroll);
+  }, []);
+  useEffect(() => {
+    if (!message) return;
+    const timer = window.setTimeout(() => setMessage(""), 5000);
+    return () => window.clearTimeout(timer);
+  }, [message]);
+  useEffect(() => {
+    const next = window.localStorage.getItem("mock-json-theme") === "light" ? "light" : "dark";
+    setTheme(next);
+    document.body.classList.toggle("light", next === "light");
+  }, []);
+  function toggleTheme() {
+    const next = theme === "dark" ? "light" : "dark";
+    setTheme(next);
+    document.body.classList.toggle("light", next === "light");
+    window.localStorage.setItem("mock-json-theme", next);
+  }
+  useEffect(() => {
+    if (!selected) {
+      setEndpoints([]);
+      setSelectedEndpoint(null);
+      return;
+    }
+    fetch("/api/projects/" + selected.id + "/endpoints")
+      .then((response) => response.json())
+      .then((data) => setEndpoints(Array.isArray(data) ? data : []));
+  }, [selected]);
+  async function create() {
+    if (!name.trim()) return;
+    const r = await fetch("/api/projects", {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ name, visibility: "PUBLIC" }),
+    });
+    if (r.ok) {
+      setName("");
+      void load();
+      setMessage("Project created.");
+    }
+  }
+  async function endpoint(e: React.FormEvent<HTMLFormElement>) {
+    e.preventDefault();
+    if (!selected) return;
+    const form = e.currentTarget;
+    const f = new FormData(form);
+    let responseBody;
+    try {
+      responseBody = JSON.parse(String(f.get("responseBody")));
+    } catch {
+      setMessage("Response must be valid JSON.");
+      return;
+    }
+    const r = await fetch(`/api/projects/${selected.id}/endpoints`, {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({
+        endpointId: selectedEndpoint?.id,
+        name: f.get("endpointName"),
+        method: f.get("method"),
+        path: f.get("path"),
+        statusCode: Number(f.get("statusCode")),
+        responseBody,
+        responseHeaders: {},
+        delayMs: 0,
+        enabled: true,
+        mode: "STATIC",
+      }),
+    });
+    if (!r.ok) {
+      setMessage((await r.json()).error);
+      return;
+    }
+    const saved = await r.json();
+    setEndpoints((current) =>
+      selectedEndpoint
+        ? current.map((item) => (item.id === saved.id ? saved : item))
+        : [...current, saved].sort((a, b) => a.path.localeCompare(b.path)),
+    );
+    setResource(resourceName(saved.path));
+    setMethod(saved.method);
+    setSelectedEndpoint(saved);
+    setMessage(selectedEndpoint ? "Endpoint updated." : "Endpoint added.");
+    form.reset();
+  }
+  async function deleteProject() {
+    if (
+      !selected ||
+      !window.confirm(`Delete ${selected.name} and all its endpoints?`)
+    )
+      return;
+    const response = await fetch(`/api/projects/${selected.id}`, {
+      method: "DELETE",
+    });
+    if (response.ok) {
+      setSelected(null);
+      setMessage("Project deleted.");
+      void load();
+    } else setMessage("Could not delete this project.");
+  }
+  async function deleteEndpoint() {
+    if (!selected || !selectedEndpoint) return;
+    if (!window.confirm("Delete " + selectedEndpoint.method + " " + selectedEndpoint.path + "?")) return;
+    const response = await fetch("/api/projects/" + selected.id + "/endpoints/" + selectedEndpoint.id, { method: "DELETE" });
+    if (response.ok) {
+      setEndpoints((items) => items.filter((item) => item.id !== selectedEndpoint.id));
+      setSelectedEndpoint(null);
+      setMessage("Endpoint deleted.");
+    }
+  }
+  async function copyUrl(url: string) {
+    const parsed = new URL(url);
+    if (!parsed.pathname.startsWith("/api/")) {
+      parsed.pathname = "/api" + (parsed.pathname.startsWith("/") ? parsed.pathname : "/" + parsed.pathname);
+    }
+    await navigator.clipboard.writeText(parsed.toString());
+    setMessage("Endpoint URL copied.");
+  }
+  const resources = Array.from(
+    new Set(endpoints.map((item) => resourceName(item.path))),
+  );
+  const visibleEndpoints = resource
+    ? endpoints.filter((item) => resourceName(item.path) === resource)
+    : endpoints;
+  const filteredEndpoints = method
+    ? visibleEndpoints.filter((item) => item.method === method)
+    : visibleEndpoints;
+  return (
+    <>
+    <main className="dashboard-frame relative mx-auto flex min-h-screen w-full max-w-5xl flex-col border-x border-zinc-700/60 px-5 pb-2 pt-24 sm:px-8 sm:pb-3 sm:pt-24">
+      <header className={"fixed left-1/2 top-4 z-20 flex w-[calc(100%-2rem)] max-w-[60rem] -translate-x-1/2 items-center justify-between rounded-2xl border border-indigo-300/40 bg-zinc-900/45 px-4 shadow-xl shadow-black/20 transition-all duration-300 sm:w-[calc(100%-4rem)] sm:px-5 " + (scrolled ? "bg-zinc-900/35 py-2 backdrop-blur-2xl shadow-2xl" : "py-3 backdrop-blur-lg")}>
+        <div className="flex items-center gap-2">
+          <span className="grid size-8 place-items-center overflow-hidden rounded-lg bg-white">
+            <img src="/json-png.png" alt="" className="size-8 object-contain" />
+          </span>
+          <span className="muted max-w-[7rem] truncate text-xs sm:max-w-none sm:text-sm">{username}</span>
+        </div>
+        <span title="Mock JSON Data" className="group absolute left-1/2 -translate-x-1/2 text-sm tracking-tight transition-colors hover:text-indigo-300 sm:text-xl">
+          <span>Mock JSON Data</span>
+        </span>
+        <div className="flex items-center gap-2">
+        <button
+          type="button"
+          onClick={toggleTheme}
+          title={theme === "dark" ? "Switch to light mode" : "Switch to dark mode"}
+          aria-label={theme === "dark" ? "Switch to light mode" : "Switch to dark mode"}
+          className="border border-zinc-700 p-2"
+        >
+          {theme === "dark" ? <Sun size={16} /> : <Moon size={16} />}
+        </button>
+        <button
+          onClick={() =>
+            fetch("/api/auth/logout", { method: "POST" }).then(
+              () => (location.href = "/"),
+            )
+          }
+          className="border border-zinc-700 px-3 py-2 text-sm hover:border-red-400 hover:bg-red-500/10 hover:text-red-300"
+        >
+          Log out
+        </button>
+        </div>
+      </header>
+      <div className="grid flex-1 gap-6 py-8 lg:grid-cols-[300px_minmax(0,1fr)] lg:items-stretch">
+        <section className="lg:sticky lg:top-24 lg:self-start lg:min-h-full lg:border-r lg:border-zinc-700/60 lg:pr-6">
+          <p className="muted text-xs font-semibold uppercase tracking-[0.18em]">Workspace</p>
+          <div className="border-b-2 border-zinc-700 pb-4">
+            <h1 className="mt-1 text-2xl font-bold tracking-tight">Your APIs</h1>
+            <p className="muted mt-2 text-xs">Collections, resources, and routes</p>
+          </div>
+          <div className="mt-4 flex w-full max-w-md items-center gap-2">
+            <input
+              className="min-w-0 flex-1"
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              placeholder="API name"
+            />
+            <button className="btn shrink-0 whitespace-nowrap" onClick={create}>
+              Create API
+            </button>
+          </div>
+          <div className="mt-5 grid gap-3">
+            {projects.length === 0 && (
+              <div className="panel p-5">
+                <b>No APIs yet.</b>
+                <p className="muted mt-1 text-sm">
+                  Create an API, then add users, products, or orders.
+                </p>
+              </div>
+            )}
+            {projects.map((p) => (
+              <div
+                className={"panel flex items-center gap-3 p-3 hover:border-indigo-500 " + (selected?.id === p.id ? "border-indigo-500 bg-indigo-500/10" : "")}
+                key={p.id}
+              >
+                <button
+                  onClick={() => {
+                    setSelected(p);
+                    setResource(null);
+                    setMethod(null);
+                    setSelectedEndpoint(null);
+                  }}
+                  className="min-w-0 flex-1 text-left focus:outline-none focus:ring-0"
+                >
+                  <b>{p.name}</b>
+                  <p className="muted mt-1 text-sm">
+                    {p._count.endpoints} endpoints · {p.visibility.toLowerCase()}
+                  </p>
+                </button>
+                <button
+                  type="button"
+                  title={"Delete " + p.name}
+                  aria-label={"Delete " + p.name}
+                  onClick={() => {
+                    setDeleteTarget(p);
+                  }}
+                  className="shrink-0 rounded p-2 text-zinc-500 hover:bg-red-950 hover:text-red-300"
+                >
+                  <Trash2 size={16} aria-hidden="true" />
+                </button>
+              </div>
+            ))}
+          </div>
+        </section>
+        <section className="panel relative min-h-[620px] p-6 sm:p-8">
+          {selected ? (
+            <>
+              <p className="muted text-xs font-semibold uppercase tracking-wider">Mock API</p>
+              <h2 className="mt-1 text-2xl font-bold">{selected.name}</h2>
+              <div className="mt-4 rounded-lg border border-indigo-500/40 bg-indigo-500/10 p-4">
+                <p className="text-xs font-semibold uppercase tracking-wider text-indigo-300">Your API endpoint URL</p>
+                <div className="mt-2 flex items-center gap-3">
+                  <code className="min-w-0 flex-1 break-all text-sm text-indigo-100">
+                    {location.origin}/api/{selected.slug ?? selected.publicId}{selectedEndpoint?.path ?? ""}
+                  </code>
+                  <button
+                    type="button"
+                    className="inline-flex shrink-0 items-center justify-center gap-2 rounded-md bg-indigo-500 px-3 py-2 text-xs font-semibold text-white hover:bg-indigo-400"
+                    onClick={() =>
+                      copyUrl(
+                        location.origin + "/api/" + (selected.slug ?? selected.publicId) + (selectedEndpoint?.path ?? ""),
+                      )
+                    }
+                  >
+                    <Copy size={15} aria-hidden="true" />
+                    Copy URL
+                  </button>
+                </div>
+              </div>
+              <div className="mt-3 flex flex-wrap gap-2">
+                <button
+                  type="button"
+                  className="hidden"
+                  onClick={() =>
+                    copyUrl(
+                      `${location.origin}/${selected.slug ?? `m/${selected.publicId}`}/users`,
+                    )
+                  }
+                >
+                  <img src="/json-svg.svg" alt="" className="size-4" />
+                  Copy endpoint URL
+                </button>
+              </div>
+              <div className="mt-6 grid gap-6">
+                <div>
+                  <div className="flex flex-wrap items-center justify-between gap-3">
+                    <div>
+                      <h3 className="font-semibold">Resources & endpoints</h3>
+                      <p className="muted mt-1 text-sm">Endpoints are grouped by their first URL segment.</p>
+                    </div>
+                    <span className="muted text-sm">{endpoints.length} endpoint{endpoints.length === 1 ? "" : "s"}</span>
+                  </div>
+                  <div className="mt-4 flex flex-wrap gap-2">
+                    <button type="button" onClick={() => setResource(null)} className={"border px-3 py-1.5 text-sm " + (!resource ? "border-indigo-400 bg-indigo-500/15 text-indigo-200" : "border-zinc-700")}>All</button>
+                    {resources.map((item) => <button type="button" key={item} onClick={() => setResource(item)} className={"border px-3 py-1.5 text-sm capitalize " + (resource === item ? "border-indigo-400 bg-indigo-500/15 text-indigo-200" : "border-zinc-700")}>{item}</button>)}
+                  </div>
+                  <div className="mt-3 flex flex-wrap gap-2">
+                    <span className="muted self-center text-xs font-semibold uppercase tracking-wider">Method</span>
+                    {["GET", "POST", "PUT", "PATCH", "DELETE"].map((item) => (
+                      <button
+                        type="button"
+                        key={item}
+                        onClick={() => setMethod(method === item ? null : item)}
+                        className={"rounded border px-3 py-1.5 text-xs font-bold " + (method === item ? "border-indigo-400 bg-indigo-500/15 text-indigo-200" : methodStyle[item])}
+                      >
+                        {item}
+                      </button>
+                    ))}
+                  </div>
+                  <div className="mt-4 overflow-hidden rounded-lg border border-zinc-800">
+                    {filteredEndpoints.length ? filteredEndpoints.map((item) => (
+                      <button type="button" key={item.id} onClick={() => setSelectedEndpoint(item)} className={"flex w-full items-center gap-3 border-b border-zinc-800 px-4 py-3 text-left last:border-0 hover:bg-zinc-800/50 " + (selectedEndpoint?.id === item.id ? "bg-indigo-500/10" : "")}>
+                        <span className={"rounded px-2 py-1 text-xs font-bold " + (methodStyle[item.method] ?? "bg-zinc-700")}>{item.method}</span>
+                        <div className="min-w-0 flex-1"><p className="truncate font-mono text-sm">{item.path}</p><p className="muted truncate text-xs">{item.name}</p></div>
+                        <span className="muted text-xs">{item.statusCode}</span>
+                      </button>
+                    )) : <div className="muted px-4 py-10 text-center text-sm">No matching endpoints yet. Add a route below.</div>}
+                  </div>
+                  {selectedEndpoint && (
+                    <div className="mt-4 rounded-lg border border-zinc-800 bg-zinc-950/40 p-4">
+                      <div className="flex items-center gap-2">
+                        <span className={"rounded px-2 py-1 text-xs font-bold " + (methodStyle[selectedEndpoint.method] ?? "bg-zinc-700")}>{selectedEndpoint.method}</span>
+                        <code className="text-sm">{selectedEndpoint.path}</code>
+                        <span className="muted ml-auto text-xs">Status {selectedEndpoint.statusCode}</span>
+                      </div>
+                      <div className="mt-3 flex items-center justify-between">
+                        <p className="muted text-xs font-semibold uppercase tracking-wider">Response data</p>
+                        <button
+                          type="button"
+                          onClick={deleteEndpoint}
+                          title="Delete endpoint"
+                          aria-label="Delete endpoint"
+                          className="inline-flex items-center gap-1.5 rounded border border-red-900/70 px-2.5 py-1.5 text-xs text-red-300 hover:bg-red-950"
+                        >
+                          <Trash2 size={14} aria-hidden="true" />
+                          Delete endpoint
+                        </button>
+                      </div>
+                      <pre className="mt-2 max-h-72 overflow-auto rounded bg-zinc-950 p-3 text-xs text-zinc-300">{JSON.stringify(selectedEndpoint.responseBody, null, 2)}</pre>
+                    </div>
+                  )}
+                </div>
+              <form onSubmit={endpoint} className="grid gap-3 rounded-lg border border-zinc-800 bg-zinc-950/40 p-4">
+                <div><h3 className="font-semibold">Add endpoint</h3><p className="muted mt-1 text-sm">Start a Users resource with <code>/users</code>.</p></div>
+                <input
+                  name="endpointName"
+                  placeholder="Endpoint name, e.g. List users"
+                  defaultValue={selectedEndpoint?.name ?? ""}
+                  required
+                />
+                  <div className="flex min-w-0 gap-2">
+                  <select name="method" defaultValue="GET">
+                    <option>GET</option>
+                    <option>POST</option>
+                    <option>PUT</option>
+                    <option>PATCH</option>
+                    <option>DELETE</option>
+                  </select>
+                  <input className="min-w-0 flex-1" name="path" defaultValue={selectedEndpoint?.path ?? ""} placeholder="/users" required />
+                </div>
+                <input
+                  name="statusCode"
+                  type="number"
+                  defaultValue="200"
+                  min="100"
+                  max="599"
+                />
+                <textarea
+                  ref={responseRef}
+                  name="responseBody"
+                  className="min-h-44 font-mono"
+                  defaultValue={JSON.stringify(
+                    {
+                      status: 200,
+                      success: true,
+                      message: "Request successful",
+                      data: {},
+                      timestamp: "{{datetime}}",
+                    },
+                    null,
+                    2,
+                  )}
+                />
+                <button
+                  type="button"
+                  className="w-fit border border-zinc-700 px-3 py-2 text-sm"
+                  onClick={() => {
+                    if (!responseRef.current) return;
+                    try {
+                      responseRef.current.value = JSON.stringify(
+                        JSON.parse(responseRef.current.value),
+                        null,
+                        2,
+                      );
+                      setMessage("JSON formatted.");
+                    } catch {
+                      setMessage(
+                        "Response must be valid JSON before formatting.",
+                      );
+                    }
+                  }}
+                >
+                  Format JSON
+                </button>
+                  <button className="btn">{selectedEndpoint ? "Update endpoint" : "Add endpoint"}</button>
+              </form>
+              </div>
+            </>
+          ) : (
+            <div className="muted flex min-h-[520px] items-center justify-center py-20 text-center">
+              <div className="rounded-2xl border border-dashed border-indigo-400/30 bg-indigo-500/5 px-8 py-10">
+                Select a project to create and test endpoints.
+              </div>
+            </div>
+          )}
+          {message && (
+            <div className="fixed right-5 top-5 z-50 rounded-lg border border-emerald-400/40 bg-zinc-900/95 px-4 py-3 text-sm text-emerald-300 shadow-2xl shadow-black/30 backdrop-blur-xl">
+              {message}
+            </div>
+          )}
+        </section>
+      </div>
+      <footer className="mt-auto flex items-center justify-center border-t border-zinc-800 pb-2 pt-3 text-center text-xs text-zinc-500">
+        <span>Copyright © 2026&nbsp;&nbsp;·&nbsp;&nbsp;All rights reserved&nbsp;&nbsp;·&nbsp;&nbsp;V1.0.0</span>
+      </footer>
+    </main>
+    {showTop && (
+      <button
+        type="button"
+        onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
+        title="Scroll to top"
+        aria-label="Scroll to top"
+        className="fixed bottom-4 right-4 z-50 rounded-lg border border-indigo-300/30 bg-zinc-900/90 p-2 font-mono text-[11px] uppercase tracking-widest text-zinc-300 shadow-lg backdrop-blur-xl transition duration-200 hover:-translate-y-1 hover:text-indigo-300 sm:bottom-6 sm:right-6 sm:rounded-none sm:border-0 sm:bg-transparent sm:p-0 sm:shadow-none"
+      >
+        ↑<span className="ml-1">Top</span>
+      </button>
+    )}
+    {deleteTarget && (
+      <div className="fixed inset-0 z-[60] grid place-items-center bg-black/60 px-5 backdrop-blur-sm">
+        <div className="w-full max-w-sm rounded-2xl border border-red-400/30 bg-zinc-900 p-6 shadow-2xl">
+          <p className="text-xs font-semibold uppercase tracking-widest text-red-300">Delete API</p>
+          <h2 className="mt-2 text-xl font-bold">Delete {deleteTarget.name}?</h2>
+          <p className="muted mt-2 text-sm leading-6">This permanently removes the API and all of its endpoints. This action cannot be undone.</p>
+          <div className="mt-6 flex justify-end gap-2">
+            <button type="button" onClick={() => setDeleteTarget(null)} className="border border-zinc-700 px-3 py-2 text-sm">Cancel</button>
+            <button type="button" onClick={async () => {
+              const response = await fetch("/api/projects/" + deleteTarget.id, { method: "DELETE" });
+              if (response.ok) {
+                if (selected?.id === deleteTarget.id) setSelected(null);
+                setDeleteTarget(null);
+                setMessage("API deleted.");
+                void load();
+              }
+            }} className="border border-red-500/60 bg-red-500/15 px-3 py-2 text-sm text-red-300 hover:bg-red-500/30">Delete permanently</button>
+          </div>
+        </div>
+      </div>
+    )}
+    </>
+  );
+}
