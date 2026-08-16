@@ -9,18 +9,20 @@
 ![Vercel](https://img.shields.io/badge/Vercel-Ready-000000?logo=vercel&logoColor=white)
 ![License](https://img.shields.io/badge/License-MIT-green)
 
-Create realistic REST API mocks before your backend is ready. Organize resources in one API, return predictable JSON, test CRUD flows, and share a public endpoint.
+Create realistic GET API mocks before your backend is ready. Organize resources in one API, return custom JSON, and share a protected public endpoint.
 
 Built with Next.js App Router, Prisma, PostgreSQL, Zod, and Tailwind CSS.
 
 ## Features
 
 - Username/password authentication with bcrypt and secure HTTP-only sessions
-- Public and private mock APIs
+- Public mock APIs protected by a shared per-user API key
 - GET endpoints for collections and individual records
-- Static responses and stateful CRUD data
-- Request validation, scenarios, templates, delays, CORS, and request logs
+- Fully custom JSON response bodies
+- Short readable URLs such as `/api/sms-a9dhds/users`
+- CORS support, scenarios, templates, delays, and request logs
 - Dynamic values including uuid, datetime, request fields, route params, and query values
+- Automatic API deletion 30 days after creation
 - Responsive dashboard with dark/light mode
 
 ## Requirements
@@ -59,27 +61,25 @@ Never commit .env. Keep .env.example safe for GitHub.
 
 1. Register with a username and password of at least 4 characters.
 2. Create an API.
-3. Add an endpoint such as GET /users.
-4. Select an endpoint to inspect, update, or delete it.
-5. Copy the highlighted public URL.
+3. Generate your user API key from the workspace panel.
+4. Add a GET endpoint such as `/users` or `/users/:id`.
+5. Add custom JSON response data and copy the public URL.
 
 Public URLs use this format:
 
-    https://your-domain.com/api/your-api/users
+    https://your-domain.com/api/sms-a9dhds/users
 
-## Stateful CRUD
+Every request requires the user API key:
 
-Stateful mode can support:
+    X-API-Key: mjd_your_api_key
 
-    GET    /users
-    POST   /users
-    GET    /users/:id
-    PATCH  /users/:id
-    DELETE /users/:id
+or:
+
+    Authorization: Bearer mjd_your_api_key
 
 ## Scenarios and templates
 
-Choose a scenario with ?scenario=empty or the X-Mock-Scenario: empty header.
+Choose a scenario with `?scenario=empty` or the `X-Mock-Scenario: empty` header.
 
 Supported template values include:
 
@@ -108,7 +108,7 @@ If Prisma reports a locked Windows query engine, stop the running Next.js or Nod
 
 ## Deployment
 
-Configure DATABASE_URL, AUTH_SECRET, and NEXT_PUBLIC_APP_URL on Vercel or another Node-compatible host, then run prisma migrate deploy.
+Configure DATABASE_URL, AUTH_SECRET, and NEXT_PUBLIC_APP_URL on Vercel or another Node-compatible host, then run `prisma migrate deploy`. Pushes to `main` are verified and deployed by GitHub Actions.
 
 ## Security
 

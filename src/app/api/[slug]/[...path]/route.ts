@@ -37,9 +37,15 @@ async function handle(
     body,
     redirect: "manual",
   });
+  const headers = new Headers(response.headers);
+  // The platform may compress the response again. Do not forward the
+  // upstream compression metadata or clients can try to decompress twice.
+  headers.delete("content-encoding");
+  headers.delete("content-length");
+  headers.delete("transfer-encoding");
   return new NextResponse(response.body, {
     status: response.status,
-    headers: response.headers,
+    headers,
   });
 }
 

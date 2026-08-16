@@ -1,17 +1,34 @@
 @tailwind base;@tailwind components;@tailwind utilities;
 @layer base{*{box-sizing:border-box}html{font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;overflow-x:hidden;overflow-y:auto}body{@apply bg-zinc-950 text-zinc-100 antialiased transition-colors;overflow-x:hidden;overflow-y:auto;letter-spacing:-.01em}body:before{content:"";position:fixed;inset:0;pointer-events:none;opacity:.28;background-image:radial-gradient(#71717a 1px,transparent 1px);background-size:24px 24px;mask-image:linear-gradient(to bottom,black,transparent 72%)}input,textarea,select{@apply rounded-md border border-zinc-700 bg-zinc-900 px-3 py-2 text-sm outline-none focus:border-indigo-400}button{@apply rounded-md font-medium transition focus:outline-none focus:ring-2 focus:ring-indigo-400 disabled:opacity-50}button:hover:not(:disabled){transform:translateY(-1px)}.btn{@apply bg-indigo-500 px-4 py-2 text-sm text-white shadow-lg shadow-indigo-500/10 hover:bg-indigo-400}.panel{@apply rounded-2xl border border-zinc-800/90 bg-zinc-900/70 shadow-2xl shadow-black/10 backdrop-blur;transition:transform 220ms ease,box-shadow 220ms ease,border-color 220ms ease}.panel:hover{transform:translateY(-2px);border-color:rgba(129,140,248,.55);box-shadow:0 18px 40px rgba(0,0,0,.18)}.muted{@apply text-zinc-400}}
 code,pre,textarea{font-family:"JetBrains Mono",ui-monospace,SFMono-Regular,Menlo,monospace}h1,h2,h3,p{overflow-wrap:anywhere}pre{max-width:100%;white-space:pre-wrap;word-break:break-word}
+footer,footer.text-zinc-500{color:#fff!important}
 body.light{@apply bg-stone-50 text-zinc-900}
 body.light:before{opacity:.18;background-image:radial-gradient(#a1a1aa 1px,transparent 1px)}
 body.light input,body.light textarea,body.light select{@apply border-zinc-300 bg-white}
 body.light .panel{@apply border-zinc-200 bg-white/80}
 body.light .muted{@apply text-zinc-500}
+body.light .retention-label{color:#3f3f46}
+body.light .home-security-card{border-color:#e4e4e7;background:rgba(255,255,255,.78)}
+.home-security-card{transition:transform 220ms ease,box-shadow 220ms ease,border-color 220ms ease}.home-security-card:hover{transform:translateY(-2px);border-color:#f97316;box-shadow:0 18px 40px rgba(234,88,12,.14)}
+body.light .home-security-code{background:#27272a;color:#bbf7d0}
+body.light .dashboard-frame .bg-zinc-950\/40{background-color:rgba(244,244,245,.72)}
+body.light .dashboard-frame .bg-zinc-950{background-color:#f4f4f5}
+body.light .dashboard-frame .text-zinc-300{color:#3f3f46}
+body.light .dashboard-frame .text-zinc-100{color:#18181b}
+body.light .dashboard-frame .border-zinc-800{border-color:#e4e4e7}
+body.light .dashboard-frame .text-amber-200,body.light .dashboard-frame .text-amber-300{color:#92400e}
+body.light .dashboard-frame .text-emerald-300{color:#166534}
+body.light .dashboard-frame .text-sky-300{color:#075985}
+body.light .dashboard-frame .text-violet-300{color:#6b21a8}
+body.light .dashboard-frame .text-red-300{color:#b91c1c}
+body.light .dashboard-frame .bg-amber-500\/10{background-color:rgba(245,158,11,.12)}
+body.light .dashboard-frame .bg-emerald-500\/15{background-color:rgba(16,185,129,.14)}
 body.light header{border-color:#e4e4e7;background-color:rgba(255,255,255,.78)}
-body.light footer{border-color:#e4e4e7}
+body.light footer{border-color:#e4e4e7;color:#52525b!important}
 body.light main{border-color:#e4e4e7}
 body.light nav{border-color:#e4e4e7;background-color:rgba(255,255,255,.82)}
 body.light .panel{background-color:rgba(255,255,255,.9);border-color:#d4d4d8;box-shadow:0 12px 30px rgba(24,24,27,.06)}
-body.light code,body.light pre{color:#14532d}
+body.light code,body.light pre{color:#166534}body.light pre{background-color:#f4f4f5!important}
 body.light button.border-zinc-700,body.light a.border-zinc-700{border-color:#a1a1aa;color:#27272a}
 body.light .bg-zinc-900\/60,body.light .bg-zinc-900\/75,body.light .bg-zinc-900\/90{background-color:rgba(255,255,255,.9)}
 body.light .border-zinc-800,body.light .border-zinc-800\/90{border-color:#d4d4d8}

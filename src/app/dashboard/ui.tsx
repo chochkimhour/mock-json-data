@@ -1,6 +1,6 @@
 "use client";
 import { useEffect, useRef, useState } from "react";
-import { Copy, Eye, EyeOff, KeyRound, Moon, Sun, Trash2 } from "lucide-react";
+import { Copy, Eye, EyeOff, Info, KeyRound, Moon, Plus, Sun, Trash2 } from "lucide-react";
 type Project = {
   id: string;
   publicId: string;
@@ -123,7 +123,7 @@ export default function Dashboard({ username }: { username: string }) {
         name: f.get("endpointName"),
         method: f.get("method"),
         path: f.get("path"),
-        statusCode: Number(f.get("statusCode")),
+        statusCode: 200,
         responseBody,
         responseHeaders: {},
         delayMs: 0,
@@ -198,7 +198,7 @@ export default function Dashboard({ username }: { username: string }) {
           <span className="grid size-8 place-items-center overflow-hidden rounded-lg bg-white">
             <img src="/mock-json-logo.svg" alt="Mock JSON Data" className="size-8 object-contain" />
           </span>
-          <span className="muted max-w-[5rem] truncate text-xs sm:max-w-none sm:text-sm">{username}</span>
+          <span title={username} className="max-w-[7rem] truncate text-sm font-semibold text-zinc-200 sm:max-w-[14rem]">{username}</span>
         </div>
         <span title="Mock JSON Data" className="group absolute left-1/2 hidden -translate-x-1/2 cursor-pointer text-sm tracking-tight transition-colors hover:text-indigo-300 sm:block sm:text-xl">
           <span><b>Mock JSON Data</b></span>
@@ -231,7 +231,7 @@ export default function Dashboard({ username }: { username: string }) {
           <div className="border-b-2 border-zinc-700 pb-4">
             <h1 className="mt-1 text-2xl font-bold tracking-tight">Your APIs</h1>
             <p className="muted mt-2 text-xs">Collections, resources, and routes</p>
-            <p className="mt-2 text-[11px] text-amber-300">APIs are automatically deleted after 30 days.</p>
+            <div className="mt-3 flex items-start gap-2 rounded-lg border border-amber-400/20 bg-amber-400/5 p-2.5 text-xs leading-5 text-amber-200"><span className="mt-0.5 grid size-5 shrink-0 place-items-center rounded-full bg-amber-400/15 text-amber-300"><Info size={12} aria-hidden="true" /></span><p><span className="font-semibold text-amber-300">Note</span><span className="mx-1 text-amber-500/60">·</span>APIs are automatically deleted 30 days after creation.</p></div>
           </div>
           <div className="mt-4 rounded-lg border border-amber-500/30 bg-amber-500/10 p-3">
             <p className="text-xs font-semibold uppercase tracking-wider text-amber-300">Your API key</p>
@@ -253,7 +253,8 @@ export default function Dashboard({ username }: { username: string }) {
               onChange={(e) => setName(e.target.value)}
               placeholder="API name"
             />
-            <button className="btn shrink-0 whitespace-nowrap" onClick={create}>
+            <button className="btn inline-flex shrink-0 items-center gap-1.5 whitespace-nowrap" onClick={create}>
+              <Plus size={15} aria-hidden="true" />
               Create API
             </button>
           </div>
@@ -412,13 +413,6 @@ export default function Dashboard({ username }: { username: string }) {
                   <span className="inline-flex w-full items-center justify-center rounded-md border border-emerald-500/40 bg-emerald-500/15 px-3 py-2 text-xs font-bold text-emerald-300 sm:w-auto">GET</span>
                   <input className="min-w-0 flex-1" name="path" defaultValue={selectedEndpoint?.path ?? ""} placeholder="/users" required />
                 </div>
-                <input
-                  name="statusCode"
-                  type="number"
-                  defaultValue="200"
-                  min="100"
-                  max="599"
-                />
                 <textarea
                   ref={responseRef}
                   name="responseBody"

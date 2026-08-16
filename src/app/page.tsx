@@ -1,6 +1,7 @@
 import Link from "next/link";
-import { Clock3 } from "lucide-react";
+import { Clock3, Plus } from "lucide-react";
 import ThemeToggle from "./theme-toggle";
+import Typewriter from "./typewriter";
 export default function Home() {
   return (
     <main className="dashboard-frame relative mx-auto flex min-h-screen w-full max-w-5xl flex-col border-x border-zinc-800/80 px-5 pb-2 pt-6 sm:px-8 sm:pb-3 sm:pt-8">
@@ -17,7 +18,7 @@ export default function Home() {
             Developer-first mock APIs
           </p>
           <h1 className="max-w-xl text-4xl font-bold leading-[1.08] tracking-tight sm:text-5xl">
-            Mock APIs without waiting for the backend.
+            <Typewriter />
           </h1>
           <p className="muted mt-5 max-w-lg text-base leading-7 sm:text-lg">
             Design, test, and share realistic REST API mocks in seconds. Static
@@ -25,15 +26,18 @@ export default function Home() {
           </p>
           <div className="mt-5 flex max-w-lg items-start gap-2.5 border-l-2 border-orange-400/70 pl-3 text-xs leading-5 text-zinc-400">
             <Clock3 className="mt-0.5 shrink-0 text-orange-300" size={15} aria-hidden="true" />
-            <p><span className="font-semibold text-zinc-200">30-day retention.</span> Mock APIs are automatically deleted after 30 days.</p>
+            <p><span className="retention-label font-semibold text-zinc-200">30-day retention.</span> Mock APIs are automatically deleted after 30 days.</p>
           </div>
           <div className="mt-7 flex flex-wrap gap-3">
-            <Link className="btn" href="/login">
+            <Link className="btn inline-flex items-center gap-1.5" href="/login">
+              <Plus size={15} aria-hidden="true" />
               Create a Mock API
             </Link>
             <Link
               className="docs-link rounded-md border border-zinc-700 px-4 py-2 text-sm transition"
               href="/docs"
+              target="_blank"
+              rel="noopener noreferrer"
             >
               Explore documentation
             </Link>
@@ -41,8 +45,14 @@ export default function Home() {
         </div>
         <div className="panel overflow-hidden">
           <div className="border-b border-zinc-800 px-5 py-3 text-xs font-semibold uppercase tracking-wider text-indigo-300">Request → response</div>
-          <pre className="max-w-full overflow-hidden whitespace-pre-wrap break-words p-6 text-sm leading-6 text-emerald-300">{`GET /api/my-api/users\n\n200 OK\n{\n  "status": 200,\n  "success": true,\n  "message": "Request successful",\n  "data": {},\n  "timestamp": "2026-08-15T12:58:00.000Z"\n}`}</pre>
+          <pre className="max-w-full overflow-hidden whitespace-pre-wrap break-words p-6 text-sm leading-6 text-emerald-300">{`GET /api/sms-a9dhds/users\nX-API-Key: mjd_your_api_key\n\n{\n  "status": 200,\n  "success": true,\n  "message": "Request successful",\n  "data": {},\n  "timestamp": "{{datetime}}"\n}`}</pre>
         </div>
+      </section>
+      <section className="home-security-card mb-12 rounded-2xl border border-zinc-800 bg-zinc-900/50 p-5 sm:p-6">
+        <p className="text-xs font-semibold uppercase tracking-[0.18em] text-orange-300">Fast · secure · easy to use</p>
+        <h2 className="mt-2 text-xl font-bold tracking-tight">Call your mock API in seconds.</h2>
+        <p className="muted mt-2 max-w-2xl text-sm leading-6">Generate one API key in your dashboard and send it with every request. Your key protects all of your APIs and keeps unknown users from accessing your mock data.</p>
+        <code className="home-security-code mt-4 block overflow-x-auto rounded-lg bg-zinc-950 p-3 text-xs text-emerald-300">X-API-Key: mjd_your_api_key</code>
       </section>
       <section className="grid gap-4 pb-12 md:grid-cols-3">
         {[
