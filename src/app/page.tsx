@@ -1,14 +1,13 @@
 import Link from "next/link";
 import ThemeToggle from "./theme-toggle";
-import Typewriter from "./typewriter";
 export default function Home() {
   return (
     <main className="dashboard-frame relative mx-auto flex min-h-screen w-full max-w-5xl flex-col border-x border-zinc-800/80 px-5 pb-2 pt-6 sm:px-8 sm:pb-3 sm:pt-8">
       <nav className="flex items-center justify-between rounded-2xl border border-indigo-300/40 bg-zinc-900/45 px-4 py-3 shadow-xl shadow-black/20 backdrop-blur-lg">
-        <div className="flex items-center gap-2"><img src="/json-png.png" alt="" className="size-8 rounded bg-white object-contain" /><span className="text-lg tracking-tight transition-colors hover:text-indigo-300 sm:text-xl"><b>Mock JSON Data</b></span></div>
+        <div className="flex min-w-0 items-center gap-2"><img src="/mock-json-logo.svg" alt="Mock JSON Data" className="size-8 shrink-0 rounded-lg object-contain" /><span className="cursor-pointer truncate text-base tracking-tight transition-colors hover:text-indigo-300 sm:text-xl"><b>Mock JSON Data</b></span></div>
         <div className="flex items-center gap-2">
           <ThemeToggle />
-          <Link className="btn" href="/login">Open dashboard</Link>
+          <Link className="btn shrink-0 px-3 text-xs sm:px-4 sm:text-sm" href="/login">Login</Link>
         </div>
       </nav>
       <section className="grid flex-1 items-center gap-10 py-16 sm:py-20 lg:grid-cols-[1.08fr_.92fr] lg:gap-16">
@@ -17,7 +16,7 @@ export default function Home() {
             Developer-first mock APIs
           </p>
           <h1 className="max-w-xl text-4xl font-bold leading-[1.08] tracking-tight sm:text-5xl">
-            <Typewriter />
+            Mock APIs without waiting for the backend.
           </h1>
           <p className="muted mt-5 max-w-lg text-base leading-7 sm:text-lg">
             Design, test, and share realistic REST API mocks in seconds. Static

@@ -8,3 +8,7 @@ test-results
 *.tsbuildinfo
 .vercel
 *.log
+*.pem
+*.key
+*.crt
+.DS_Store

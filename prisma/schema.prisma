@@ -36,6 +36,7 @@ model User {
   id           String    @id @default(cuid())
   username     String    @unique
   passwordHash String
+  apiKey      String?   @unique @default(cuid())
   name         String?
   createdAt    DateTime  @default(now())
   updatedAt    DateTime  @updatedAt
@@ -65,6 +66,7 @@ model Project {
   ownerId          String
   createdAt        DateTime         @default(now())
   updatedAt        DateTime         @updatedAt
+  expiresAt        DateTime?
   owner            User             @relation(fields: [ownerId], references: [id], onDelete: Cascade)
   endpoints        Endpoint[]
   logs             RequestLog[]

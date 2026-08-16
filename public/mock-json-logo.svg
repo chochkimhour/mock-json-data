@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128">
+  <title>Mock JSON Data</title>
+  <rect width="128" height="128" rx="28" fill="#18181b"/>
+  <path d="M47 25H38c-7 0-12 5-12 12v16c0 7-3 11-10 11 7 0 10 4 10 11v16c0 7 5 12 12 12h9M81 25h9c7 0 12 5 12 12v16c0 7 3 11 10 11-7 0-10 4-10 11v16c0 7-5 12-12 12h-9" fill="none" stroke="#f97316" stroke-width="8" stroke-linecap="round" stroke-linejoin="round"/>
+  <circle cx="49" cy="64" r="6" fill="#fff7ed"/>
+  <circle cx="64" cy="64" r="6" fill="#fff7ed"/>
+  <circle cx="79" cy="64" r="6" fill="#fff7ed"/>
+</svg>

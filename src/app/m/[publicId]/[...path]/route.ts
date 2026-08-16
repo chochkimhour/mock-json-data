@@ -69,12 +69,17 @@ async function handle(
     return new NextResponse(null, { status: 204, headers: CORS });
   const project = await db.project.findUnique({
     where: { publicId },
-    include: {
-      endpoints: { where: { enabled: true }, include: { scenarios: true } },
-    },
+    include: { owner: { select: { apiKey: true } }, endpoints: { where: { enabled: true }, include: { scenarios: true } } },
   });
   if (!project || project.visibility !== "PUBLIC")
     return jsonEnvelope(null, 404, "Mock project not found");
+  if (project.expiresAt && project.expiresAt <= new Date()) {
+    await db.project.delete({ where: { id: project.id } });
+    return jsonEnvelope(null, 404, "Mock project expired");
+  }
+  const suppliedKey = request.headers.get("x-api-key") ?? request.headers.get("authorization")?.replace(/^Bearer\s+/i, "");
+  if (!suppliedKey || suppliedKey !== project.owner.apiKey)
+    return jsonEnvelope(null, 401, "A valid API key is required");
   const endpoints = project.endpoints as RuntimeEndpoint[];
   const urlPath = "/" + path.join("/");
   const method = request.method;

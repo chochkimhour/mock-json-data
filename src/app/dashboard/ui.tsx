@@ -1,13 +1,16 @@
 "use client";
 import { useEffect, useRef, useState } from "react";
-import { Copy, Moon, Sun, Trash2 } from "lucide-react";
+import { Copy, Eye, EyeOff, KeyRound, Moon, Sun, Trash2 } from "lucide-react";
 type Project = {
   id: string;
   publicId: string;
+  owner: { apiKey: string | null };
   slug: string | null;
   name: string;
   description: string | null;
   visibility: string;
+  updatedAt: string;
+  expiresAt: string | null;
   _count: { endpoints: number; logs: number };
 };
 type Endpoint = {
@@ -40,6 +43,9 @@ export default function Dashboard({ username }: { username: string }) {
     [theme, setTheme] = useState<"dark" | "light">("dark"),
     [scrolled, setScrolled] = useState(false),
     [deleteTarget, setDeleteTarget] = useState<Project | null>(null),
+    [endpointDeleteTarget, setEndpointDeleteTarget] = useState<Endpoint | null>(null),
+    [confirmApiKeyDelete, setConfirmApiKeyDelete] = useState(false),
+    [showApiKey, setShowApiKey] = useState(false),
     [showTop, setShowTop] = useState(false);
   const responseRef = useRef<HTMLTextAreaElement>(null);
   const load = async () => {
@@ -157,12 +163,12 @@ export default function Dashboard({ username }: { username: string }) {
     } else setMessage("Could not delete this project.");
   }
   async function deleteEndpoint() {
-    if (!selected || !selectedEndpoint) return;
-    if (!window.confirm("Delete " + selectedEndpoint.method + " " + selectedEndpoint.path + "?")) return;
-    const response = await fetch("/api/projects/" + selected.id + "/endpoints/" + selectedEndpoint.id, { method: "DELETE" });
+    if (!selected || !endpointDeleteTarget) return;
+    const response = await fetch("/api/projects/" + selected.id + "/endpoints/" + endpointDeleteTarget.id, { method: "DELETE" });
     if (response.ok) {
-      setEndpoints((items) => items.filter((item) => item.id !== selectedEndpoint.id));
+      setEndpoints((items) => items.filter((item) => item.id !== endpointDeleteTarget.id));
       setSelectedEndpoint(null);
+      setEndpointDeleteTarget(null);
       setMessage("Endpoint deleted.");
     }
   }
@@ -177,26 +183,27 @@ export default function Dashboard({ username }: { username: string }) {
   const resources = Array.from(
     new Set(endpoints.map((item) => resourceName(item.path))),
   );
+  const getEndpoints = endpoints.filter((item) => item.method === "GET");
   const visibleEndpoints = resource
-    ? endpoints.filter((item) => resourceName(item.path) === resource)
-    : endpoints;
+    ? getEndpoints.filter((item) => resourceName(item.path) === resource)
+    : getEndpoints;
   const filteredEndpoints = method
     ? visibleEndpoints.filter((item) => item.method === method)
     : visibleEndpoints;
   return (
     <>
-    <main className="dashboard-frame relative mx-auto flex min-h-screen w-full max-w-5xl flex-col border-x border-zinc-700/60 px-5 pb-2 pt-24 sm:px-8 sm:pb-3 sm:pt-24">
-      <header className={"fixed left-1/2 top-4 z-20 flex w-[calc(100%-2rem)] max-w-[60rem] -translate-x-1/2 items-center justify-between rounded-2xl border border-indigo-300/40 bg-zinc-900/45 px-4 shadow-xl shadow-black/20 transition-all duration-300 sm:w-[calc(100%-4rem)] sm:px-5 " + (scrolled ? "bg-zinc-900/35 py-2 backdrop-blur-2xl shadow-2xl" : "py-3 backdrop-blur-lg")}>
-        <div className="flex items-center gap-2">
+    <main className="dashboard-frame relative mx-auto flex min-h-screen w-full max-w-5xl flex-col border-x border-zinc-700/60 px-4 pb-2 pt-24 sm:px-8 sm:pb-3 sm:pt-24">
+      <header className={"fixed left-1/2 top-3 z-20 flex w-[calc(100%-1.5rem)] max-w-[60rem] -translate-x-1/2 items-center justify-between gap-2 rounded-2xl border border-indigo-300/40 bg-zinc-900/45 px-3 shadow-xl shadow-black/20 transition-all duration-300 sm:top-4 sm:w-[calc(100%-4rem)] sm:px-5 " + (scrolled ? "bg-zinc-900/35 py-2 backdrop-blur-2xl shadow-2xl" : "py-2.5 backdrop-blur-lg sm:py-3")}>
+        <div className="flex min-w-0 items-center gap-2">
           <span className="grid size-8 place-items-center overflow-hidden rounded-lg bg-white">
-            <img src="/json-png.png" alt="" className="size-8 object-contain" />
+            <img src="/mock-json-logo.svg" alt="Mock JSON Data" className="size-8 object-contain" />
           </span>
-          <span className="muted max-w-[7rem] truncate text-xs sm:max-w-none sm:text-sm">{username}</span>
+          <span className="muted max-w-[5rem] truncate text-xs sm:max-w-none sm:text-sm">{username}</span>
         </div>
-        <span title="Mock JSON Data" className="group absolute left-1/2 -translate-x-1/2 text-sm tracking-tight transition-colors hover:text-indigo-300 sm:text-xl">
-          <span>Mock JSON Data</span>
+        <span title="Mock JSON Data" className="group absolute left-1/2 hidden -translate-x-1/2 cursor-pointer text-sm tracking-tight transition-colors hover:text-indigo-300 sm:block sm:text-xl">
+          <span><b>Mock JSON Data</b></span>
         </span>
-        <div className="flex items-center gap-2">
+        <div className="flex shrink-0 items-center gap-1.5 sm:gap-2">
         <button
           type="button"
           onClick={toggleTheme}
@@ -212,7 +219,7 @@ export default function Dashboard({ username }: { username: string }) {
               () => (location.href = "/"),
             )
           }
-          className="border border-zinc-700 px-3 py-2 text-sm hover:border-red-400 hover:bg-red-500/10 hover:text-red-300"
+          className="border border-zinc-700 px-2.5 py-2 text-xs hover:border-red-400 hover:bg-red-500/10 hover:text-red-300 sm:px-3 sm:text-sm"
         >
           Log out
         </button>
@@ -224,6 +231,20 @@ export default function Dashboard({ username }: { username: string }) {
           <div className="border-b-2 border-zinc-700 pb-4">
             <h1 className="mt-1 text-2xl font-bold tracking-tight">Your APIs</h1>
             <p className="muted mt-2 text-xs">Collections, resources, and routes</p>
+            <p className="mt-2 text-[11px] text-amber-300">APIs are automatically deleted after 30 days.</p>
+          </div>
+          <div className="mt-4 rounded-lg border border-amber-500/30 bg-amber-500/10 p-3">
+            <p className="text-xs font-semibold uppercase tracking-wider text-amber-300">Your API key</p>
+            <p className="muted mt-1 text-xs">Use this key for all your mock APIs.</p>
+            <div className="mt-2">
+              <code className="block truncate text-xs text-amber-100">{projects[0]?.owner.apiKey ? (showApiKey ? projects[0].owner.apiKey : "••••••••••••••••••••") : "Loading..."}</code>
+            </div>
+            <div className="mt-2 flex flex-nowrap gap-2">
+              <button type="button" className="inline-flex items-center gap-1 border border-amber-500/40 px-2 py-1 text-xs" onClick={async () => { const response = await fetch("/api/auth/api-key", { method: "POST" }); if (!response.ok) { const body = await response.json().catch(() => null); setMessage(body?.error ?? "Could not generate API key."); return; } await load(); setMessage("API key generated."); }}><KeyRound size={13} />Generate</button>
+              <button type="button" title={showApiKey ? "Hide API key" : "Show API key"} aria-label={showApiKey ? "Hide API key" : "Show API key"} disabled={!projects[0]?.owner.apiKey} className="inline-flex size-7 items-center justify-center border border-amber-500/40" onClick={() => setShowApiKey((value) => !value)}>{showApiKey ? <EyeOff size={13} /> : <Eye size={13} />}</button>
+              <button type="button" title="Copy API key" aria-label="Copy API key" disabled={!projects[0]?.owner.apiKey} className="inline-flex size-7 items-center justify-center border border-amber-500/40" onClick={() => projects[0]?.owner.apiKey && navigator.clipboard.writeText(projects[0].owner.apiKey).then(() => setMessage("API key copied."))}><Copy size={13} /></button>
+              <button type="button" title="Delete API key" aria-label="Delete API key" disabled={!projects[0]?.owner.apiKey} className="inline-flex size-7 items-center justify-center border border-red-500/40 text-red-300" onClick={() => setConfirmApiKeyDelete(true)}><Trash2 size={13} /></button>
+            </div>
           </div>
           <div className="mt-4 flex w-full max-w-md items-center gap-2">
             <input
@@ -247,7 +268,7 @@ export default function Dashboard({ username }: { username: string }) {
             )}
             {projects.map((p) => (
               <div
-                className={"panel flex items-center gap-3 p-3 hover:border-indigo-500 " + (selected?.id === p.id ? "border-indigo-500 bg-indigo-500/10" : "")}
+                className={"panel project-card flex items-center gap-3 p-3 hover:border-orange-500 " + (selected?.id === p.id ? "border-orange-500 bg-orange-500/10" : "")}
                 key={p.id}
               >
                 <button
@@ -263,6 +284,7 @@ export default function Dashboard({ username }: { username: string }) {
                   <p className="muted mt-1 text-sm">
                     {p._count.endpoints} endpoints · {p.visibility.toLowerCase()}
                   </p>
+                  <p className="muted mt-1 text-[11px]">Updated {new Date(p.updatedAt).toLocaleDateString()}</p>
                 </button>
                 <button
                   type="button"
@@ -279,20 +301,20 @@ export default function Dashboard({ username }: { username: string }) {
             ))}
           </div>
         </section>
-        <section className="panel relative min-h-[620px] p-6 sm:p-8">
+        <section className="panel relative min-h-0 min-w-0 p-4 sm:min-h-[620px] sm:p-8">
           {selected ? (
             <>
               <p className="muted text-xs font-semibold uppercase tracking-wider">Mock API</p>
-              <h2 className="mt-1 text-2xl font-bold">{selected.name}</h2>
+              <h2 className="mt-1 break-words text-2xl font-bold">{selected.name}</h2>
               <div className="mt-4 rounded-lg border border-indigo-500/40 bg-indigo-500/10 p-4">
                 <p className="text-xs font-semibold uppercase tracking-wider text-indigo-300">Your API endpoint URL</p>
-                <div className="mt-2 flex items-center gap-3">
+                <div className="mt-2 flex flex-col items-stretch gap-2 sm:flex-row sm:items-center sm:gap-3">
                   <code className="min-w-0 flex-1 break-all text-sm text-indigo-100">
                     {location.origin}/api/{selected.slug ?? selected.publicId}{selectedEndpoint?.path ?? ""}
                   </code>
                   <button
                     type="button"
-                    className="inline-flex shrink-0 items-center justify-center gap-2 rounded-md bg-indigo-500 px-3 py-2 text-xs font-semibold text-white hover:bg-indigo-400"
+                    className="inline-flex w-full shrink-0 items-center justify-center gap-2 rounded-md bg-indigo-500 px-3 py-2 text-xs font-semibold text-white hover:bg-indigo-400 sm:w-auto"
                     onClick={() =>
                       copyUrl(
                         location.origin + "/api/" + (selected.slug ?? selected.publicId) + (selectedEndpoint?.path ?? ""),
@@ -300,7 +322,7 @@ export default function Dashboard({ username }: { username: string }) {
                     }
                   >
                     <Copy size={15} aria-hidden="true" />
-                    Copy URL
+                    Copy
                   </button>
                 </div>
               </div>
@@ -315,7 +337,7 @@ export default function Dashboard({ username }: { username: string }) {
                   }
                 >
                   <img src="/json-svg.svg" alt="" className="size-4" />
-                  Copy endpoint URL
+                  Copy
                 </button>
               </div>
               <div className="mt-6 grid gap-6">
@@ -333,7 +355,7 @@ export default function Dashboard({ username }: { username: string }) {
                   </div>
                   <div className="mt-3 flex flex-wrap gap-2">
                     <span className="muted self-center text-xs font-semibold uppercase tracking-wider">Method</span>
-                    {["GET", "POST", "PUT", "PATCH", "DELETE"].map((item) => (
+                    {["GET"].map((item) => (
                       <button
                         type="button"
                         key={item}
@@ -355,22 +377,22 @@ export default function Dashboard({ username }: { username: string }) {
                   </div>
                   {selectedEndpoint && (
                     <div className="mt-4 rounded-lg border border-zinc-800 bg-zinc-950/40 p-4">
-                      <div className="flex items-center gap-2">
+                      <div className="flex flex-wrap items-center gap-2">
                         <span className={"rounded px-2 py-1 text-xs font-bold " + (methodStyle[selectedEndpoint.method] ?? "bg-zinc-700")}>{selectedEndpoint.method}</span>
-                        <code className="text-sm">{selectedEndpoint.path}</code>
+                        <code className="min-w-0 break-all text-sm">{selectedEndpoint.path}</code>
                         <span className="muted ml-auto text-xs">Status {selectedEndpoint.statusCode}</span>
                       </div>
                       <div className="mt-3 flex items-center justify-between">
                         <p className="muted text-xs font-semibold uppercase tracking-wider">Response data</p>
                         <button
                           type="button"
-                          onClick={deleteEndpoint}
+                          onClick={() => setEndpointDeleteTarget(selectedEndpoint)}
                           title="Delete endpoint"
                           aria-label="Delete endpoint"
                           className="inline-flex items-center gap-1.5 rounded border border-red-900/70 px-2.5 py-1.5 text-xs text-red-300 hover:bg-red-950"
                         >
                           <Trash2 size={14} aria-hidden="true" />
-                          Delete endpoint
+                          Delete
                         </button>
                       </div>
                       <pre className="mt-2 max-h-72 overflow-auto rounded bg-zinc-950 p-3 text-xs text-zinc-300">{JSON.stringify(selectedEndpoint.responseBody, null, 2)}</pre>
@@ -378,21 +400,16 @@ export default function Dashboard({ username }: { username: string }) {
                   )}
                 </div>
               <form onSubmit={endpoint} className="grid gap-3 rounded-lg border border-zinc-800 bg-zinc-950/40 p-4">
-                <div><h3 className="font-semibold">Add endpoint</h3><p className="muted mt-1 text-sm">Start a Users resource with <code>/users</code>.</p></div>
+                <div><h3 className="font-semibold">Add GET endpoint</h3><p className="muted mt-1 text-sm">Use <code>/users</code> for a collection or <code>/users/:id</code> for one item.</p></div>
                 <input
                   name="endpointName"
                   placeholder="Endpoint name, e.g. List users"
                   defaultValue={selectedEndpoint?.name ?? ""}
                   required
                 />
-                  <div className="flex min-w-0 gap-2">
-                  <select name="method" defaultValue="GET">
-                    <option>GET</option>
-                    <option>POST</option>
-                    <option>PUT</option>
-                    <option>PATCH</option>
-                    <option>DELETE</option>
-                  </select>
+                  <div className="flex min-w-0 flex-col gap-2 sm:flex-row">
+                  <input type="hidden" name="method" value="GET" />
+                  <span className="inline-flex w-full items-center justify-center rounded-md border border-emerald-500/40 bg-emerald-500/15 px-3 py-2 text-xs font-bold text-emerald-300 sm:w-auto">GET</span>
                   <input className="min-w-0 flex-1" name="path" defaultValue={selectedEndpoint?.path ?? ""} placeholder="/users" required />
                 </div>
                 <input
@@ -489,6 +506,32 @@ export default function Dashboard({ username }: { username: string }) {
                 void load();
               }
             }} className="border border-red-500/60 bg-red-500/15 px-3 py-2 text-sm text-red-300 hover:bg-red-500/30">Delete permanently</button>
+          </div>
+        </div>
+      </div>
+    )}
+    {endpointDeleteTarget && (
+      <div className="fixed inset-0 z-[60] grid place-items-center bg-black/60 px-5 backdrop-blur-sm">
+        <div className="w-full max-w-sm rounded-2xl border border-red-400/30 bg-zinc-900 p-6 shadow-2xl">
+          <p className="text-xs font-semibold uppercase tracking-widest text-red-300">Delete endpoint</p>
+          <h2 className="mt-2 break-words text-xl font-bold">Delete {endpointDeleteTarget.method} {endpointDeleteTarget.path}?</h2>
+          <p className="muted mt-2 text-sm leading-6">This permanently removes this endpoint and its response data. This action cannot be undone.</p>
+          <div className="mt-6 flex justify-end gap-2">
+            <button type="button" onClick={() => setEndpointDeleteTarget(null)} className="border border-zinc-700 px-3 py-2 text-sm">Cancel</button>
+            <button type="button" onClick={deleteEndpoint} className="border border-red-500/60 bg-red-500/15 px-3 py-2 text-sm text-red-300 hover:bg-red-500/30">Delete permanently</button>
+          </div>
+        </div>
+      </div>
+    )}
+    {confirmApiKeyDelete && (
+      <div className="fixed inset-0 z-[60] grid place-items-center bg-black/60 px-5 backdrop-blur-sm">
+        <div className="w-full max-w-sm rounded-2xl border border-red-400/30 bg-zinc-900 p-6 shadow-2xl">
+          <p className="text-xs font-semibold uppercase tracking-widest text-red-300">Delete API key</p>
+          <h2 className="mt-2 text-xl font-bold">Delete your API key?</h2>
+          <p className="muted mt-2 text-sm leading-6">All your mock API requests will stop working until you generate a new key.</p>
+          <div className="mt-6 flex justify-end gap-2">
+            <button type="button" onClick={() => setConfirmApiKeyDelete(false)} className="border border-zinc-700 px-3 py-2 text-sm">Cancel</button>
+            <button type="button" onClick={async () => { const response = await fetch("/api/auth/api-key", { method: "DELETE" }); setConfirmApiKeyDelete(false); if (!response.ok) { setMessage("Could not delete API key."); return; } await load(); setMessage("API key deleted."); }} className="border border-red-500/60 bg-red-500/15 px-3 py-2 text-sm text-red-300 hover:bg-red-500/30">Delete permanently</button>
           </div>
         </div>
       </div>
