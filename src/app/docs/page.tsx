@@ -22,7 +22,7 @@ const steps = [
 export default function Docs() {
   return (
     <main className="dashboard-frame relative mx-auto flex min-h-screen w-full max-w-5xl flex-col border-x border-zinc-800/80 px-5 pb-2 pt-24 sm:px-8 sm:pb-3 sm:pt-24">
-      <header className="fixed left-1/2 top-0 z-50 flex w-[calc(100%-1.5rem)] max-w-[60rem] -translate-x-1/2 items-center justify-between rounded-2xl border border-zinc-800/90 bg-zinc-950/75 px-4 py-3 backdrop-blur sm:top-4 sm:w-[calc(100%-4rem)]">
+      <header className="fixed left-1/2 top-3 z-50 flex w-[calc(100%-1.5rem)] max-w-[60rem] -translate-x-1/2 items-center justify-between rounded-2xl border border-zinc-800/90 bg-zinc-950/75 px-4 py-3 backdrop-blur sm:top-4 sm:w-[calc(100%-4rem)]">
         <Link href="/" className="font-semibold tracking-tight">
           Mock JSON Data
         </Link>

@@ -135,6 +135,9 @@ body.light .dashboard-frame .text-zinc-300 {
 body.light .dashboard-frame .text-zinc-100 {
   color: #18181b;
 }
+body.light .dashboard-frame .text-zinc-200 {
+  color: #27272a;
+}
 body.light .dashboard-frame .border-zinc-800 {
   border-color: #e4e4e7;
 }
@@ -272,6 +275,41 @@ button:not(.rounded-full) {
 .dashboard-frame {
   isolation: isolate;
   overflow: visible;
+}
+.project-list-scroll {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(129, 140, 248, 0.45) transparent;
+}
+.thin-scrollbar {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(129, 140, 248, 0.45) transparent;
+}
+.thin-scrollbar::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+.thin-scrollbar::-webkit-scrollbar-track {
+  background: transparent;
+}
+.thin-scrollbar::-webkit-scrollbar-thumb {
+  border-radius: 999px;
+  background: rgba(129, 140, 248, 0.45);
+}
+.thin-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: rgba(129, 140, 248, 0.7);
+}
+.project-list-scroll::-webkit-scrollbar {
+  width: 6px;
+}
+.project-list-scroll::-webkit-scrollbar-track {
+  background: transparent;
+}
+.project-list-scroll::-webkit-scrollbar-thumb {
+  border-radius: 999px;
+  background: rgba(129, 140, 248, 0.45);
+}
+.project-list-scroll::-webkit-scrollbar-thumb:hover {
+  background: rgba(129, 140, 248, 0.7);
 }
 .dashboard-frame::before,
 .dashboard-frame::after {

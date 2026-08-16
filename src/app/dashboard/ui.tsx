@@ -1,7 +1,9 @@
 "use client";
 import { useEffect, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import {
   Copy,
+  CheckCircle2,
   Eye,
   EyeOff,
   Info,
@@ -10,6 +12,7 @@ import {
   Plus,
   Sun,
   Trash2,
+  X,
 } from "lucide-react";
 type Project = {
   id: string;
@@ -219,7 +222,7 @@ export default function Dashboard({ username }: { username: string }) {
       <main className="dashboard-frame relative mx-auto flex min-h-screen w-full max-w-5xl flex-col border-x border-zinc-700/60 px-4 pb-2 pt-24 sm:px-8 sm:pb-3 sm:pt-24">
         <header
           className={
-            "fixed left-1/2 top-0 z-50 flex w-[calc(100%-1.5rem)] max-w-[60rem] -translate-x-1/2 items-center justify-between gap-2 rounded-2xl border border-indigo-300/40 bg-zinc-900/45 px-3 shadow-xl shadow-black/20 transition-all duration-300 sm:top-4 sm:w-[calc(100%-4rem)] sm:px-5 " +
+            "fixed left-1/2 top-3 z-50 flex w-[calc(100%-1.5rem)] max-w-[60rem] -translate-x-1/2 items-center justify-between gap-2 rounded-2xl border border-indigo-300/40 bg-zinc-900/45 px-3 shadow-xl shadow-black/20 transition-all duration-300 sm:top-4 sm:w-[calc(100%-4rem)] sm:px-5 " +
             (scrolled
               ? "bg-zinc-900/35 py-2 backdrop-blur-2xl shadow-2xl"
               : "py-2.5 backdrop-blur-lg sm:py-3")
@@ -308,12 +311,12 @@ export default function Dashboard({ username }: { username: string }) {
               <p className="muted mt-1 text-xs">
                 Use this key for all your mock APIs.
               </p>
-              <div className="mt-2">
-                <code className="block truncate text-xs text-amber-100">
+              <div className="mt-2 min-w-0 max-w-full overflow-hidden">
+                <code className="block min-w-0 max-w-full overflow-hidden text-ellipsis whitespace-nowrap text-xs text-amber-100">
                   {projects[0]?.owner.apiKey
                     ? showApiKey
                       ? projects[0].owner.apiKey
-                      : "••••••••••••••••••••"
+                      : "*".repeat(projects[0].owner.apiKey.length)
                     : "Loading..."}
                 </code>
               </div>
@@ -379,7 +382,7 @@ export default function Dashboard({ username }: { username: string }) {
                 className="min-w-0 flex-1"
                 value={name}
                 onChange={(e) => setName(e.target.value)}
-                placeholder="API name"
+                placeholder="Enter API name"
               />
               <button
                 className="btn inline-flex shrink-0 items-center gap-1.5 whitespace-nowrap"
@@ -389,7 +392,7 @@ export default function Dashboard({ username }: { username: string }) {
                 Create
               </button>
             </div>
-            <div className="mt-5 grid gap-3">
+            <div className="thin-scrollbar project-list-scroll -my-2 mt-5 grid max-h-[620px] gap-3 overflow-y-auto px-1 py-2">
               {projects.length === 0 && (
                 <div className="panel p-5">
                   <b>No APIs yet.</b>
@@ -632,7 +635,7 @@ export default function Dashboard({ username }: { username: string }) {
                             Delete
                           </button>
                         </div>
-                        <pre className="mt-2 max-h-72 overflow-auto rounded bg-zinc-950 p-3 text-xs text-zinc-300">
+                        <pre className="thin-scrollbar mt-2 max-h-72 overflow-auto rounded bg-zinc-950 p-3 text-xs text-zinc-300">
                           {JSON.stringify(
                             selectedEndpoint.responseBody,
                             null,
@@ -675,7 +678,7 @@ export default function Dashboard({ username }: { username: string }) {
                     <textarea
                       ref={responseRef}
                       name="responseBody"
-                      className="min-h-44 font-mono"
+                      className="thin-scrollbar min-h-44 font-mono"
                       defaultValue={JSON.stringify(
                         {
                           status: 200,
@@ -716,17 +719,41 @@ export default function Dashboard({ username }: { username: string }) {
                 </div>
               </>
             ) : (
-              <div className="muted flex min-h-[520px] items-center justify-center py-20 text-center">
-                <div className="rounded-2xl border border-dashed border-indigo-400/30 bg-indigo-500/5 px-8 py-10">
+              <div className="muted flex min-h-[520px] w-full items-center justify-center py-20 text-center">
+                <div className="mx-auto translate-y-8 rounded-2xl border border-dashed border-indigo-400/30 bg-indigo-500/5 px-8 py-10 text-center">
                   Select a project to create and test endpoints.
                 </div>
               </div>
             )}
-            {message && (
-              <div className="fixed right-5 top-5 z-50 rounded-lg border border-emerald-400/40 bg-zinc-900/95 px-4 py-3 text-sm text-emerald-300 shadow-2xl shadow-black/30 backdrop-blur-xl">
-                {message}
-              </div>
-            )}
+            {message && typeof document !== "undefined"
+              ? createPortal(
+                  <div
+                    className="fixed right-5 top-5 z-50 w-[calc(100%-2.5rem)] max-w-sm"
+                    role="status"
+                    aria-live="polite"
+                  >
+                    <div className="flex items-start gap-3 rounded-xl border border-emerald-400/30 bg-zinc-900/95 px-4 py-3 text-sm text-emerald-200 shadow-2xl shadow-black/30 backdrop-blur-xl">
+                      <CheckCircle2
+                        className="mt-0.5 shrink-0 text-emerald-400"
+                        size={18}
+                        aria-hidden="true"
+                      />
+                      <p className="min-w-0 flex-1 break-words leading-5">
+                        {message}
+                      </p>
+                      <button
+                        type="button"
+                        onClick={() => setMessage("")}
+                        className="-mr-1 -mt-1 shrink-0 rounded-md p-1 text-emerald-300/70 hover:bg-emerald-400/10 hover:text-emerald-200"
+                        aria-label="Dismiss notification"
+                      >
+                        <X size={16} aria-hidden="true" />
+                      </button>
+                    </div>
+                  </div>,
+                  document.body,
+                )
+              : null}
           </section>
         </div>
         <footer className="mt-auto flex items-center justify-center border-t border-zinc-800 pb-2 pt-3 text-center text-xs text-zinc-500">
