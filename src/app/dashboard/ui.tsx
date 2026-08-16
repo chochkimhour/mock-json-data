@@ -83,7 +83,11 @@ export default function Dashboard({ displayName }: { displayName: string }) {
       const data = await response.json();
       setProjects(data);
       setHealth(performance.now() - started > 800 ? "slow" : "healthy");
-      if (data[0]?.owner?.apiKeyCreatedAt) {
+      if (
+        data[0]?.owner?.apiKeyLast4 &&
+        !data[0]?.owner?.apiKeyRevokedAt &&
+        data[0]?.owner?.apiKeyCreatedAt
+      ) {
         setApiKeyExpiresAt(
           new Date(
             new Date(data[0].owner.apiKeyCreatedAt).getTime() +
@@ -1032,6 +1036,7 @@ export default function Dashboard({ displayName }: { displayName: string }) {
                   });
                   setConfirmApiKeyDelete(false);
                   setApiKey(null);
+                  setApiKeyExpiresAt(null);
                   if (!response.ok) {
                     setMessage("Could not delete API key.");
                     return;
