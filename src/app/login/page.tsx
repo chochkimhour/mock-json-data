@@ -18,13 +18,16 @@ export default function Login() {
     else setError((await r.json()).error);
   }
   return (
-    <main className="grid min-h-screen place-items-center px-6 py-10">
+    <main className="grid min-h-screen place-items-center px-4 py-6 sm:px-6 sm:py-10">
       <div className="w-full max-w-md">
         <h1 className="text-center text-3xl font-bold">Welcome back</h1>
         <p className="muted mt-2 text-center">
           Sign in to manage your mock APIs.
         </p>
-        <form onSubmit={submit} className="panel mt-8 grid gap-4 p-6">
+        <form
+          onSubmit={submit}
+          className="panel mt-6 grid gap-4 p-4 sm:mt-8 sm:p-6"
+        >
           <input name="username" placeholder="Username" required />
           <div className="relative">
             <input
@@ -38,12 +41,20 @@ export default function Login() {
             <button
               type="button"
               onClick={() => setShowPassword((value) => !value)}
-              className="absolute right-1 top-1/2 -translate-y-1/2 p-2 text-zinc-400 hover:text-zinc-200"
+              className="password-toggle absolute right-1 top-1/2 flex h-8 w-8 -translate-y-1/2 items-center justify-center rounded-md border border-zinc-600 bg-zinc-800/80 p-0 text-zinc-200 hover:bg-zinc-700 hover:text-white"
               aria-label={showPassword ? "Hide password" : "Show password"}
             >
-              {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+              {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
             </button>
           </div>
+          <label className="flex items-center gap-2 text-sm text-zinc-400">
+            <input
+              name="rememberMe"
+              type="checkbox"
+              className="size-4 accent-indigo-500"
+            />
+            Remember me
+          </label>
           <button className="btn">Sign in</button>
           {error && <p className="text-sm text-red-400">{error}</p>}
         </form>

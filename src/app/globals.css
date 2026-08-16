@@ -144,6 +144,18 @@ body.light .dashboard-toast {
   color: #166534;
   box-shadow: 0 20px 45px rgba(24, 24, 27, 0.14);
 }
+body.light .password-toggle {
+  border-color: #d4d4d8;
+  background: rgba(244, 244, 245, 0.9);
+  color: #3f3f46;
+}
+body.light .password-toggle:hover {
+  background: #e4e4e7;
+  color: #27272a;
+}
+body .password-toggle:hover {
+  transform: translateY(-50%) !important;
+}
 body.light .danger-modal {
   border-color: rgba(220, 38, 38, 0.28);
   background: rgba(255, 255, 255, 0.98);

@@ -25,22 +25,26 @@ export async function currentUser() {
   if (!session || session.expiresAt < new Date()) return null;
   return session.user;
 }
-export async function createSession(userId: string) {
+export async function createSession(userId: string, remember = false) {
   const token = randomBytes(32).toString("base64url");
+  const maxAge = remember ? 60 * 60 * 24 * 7 : 60 * 60 * 24;
   await db.session.create({
     data: {
       userId,
       tokenHash: hash(token),
-      expiresAt: new Date(Date.now() + 1000 * 60 * 60 * 24 * 30),
+      expiresAt: new Date(Date.now() + maxAge * 1000),
     },
   });
-  (await cookies()).set(cookieName, token, {
+  const cookieOptions: Parameters<
+    Awaited<ReturnType<typeof cookies>>["set"]
+  >[2] = {
     httpOnly: true,
     secure: process.env.NODE_ENV === "production",
     sameSite: "lax",
     path: "/",
-    maxAge: 60 * 60 * 24 * 30,
-  });
+  };
+  if (remember) cookieOptions.maxAge = maxAge;
+  (await cookies()).set(cookieName, token, cookieOptions);
 }
 export async function destroySession() {
   const store = await cookies(),

@@ -292,8 +292,8 @@ export default function Dashboard({ displayName }: { displayName: string }) {
             </button>
           </div>
         </header>
-        <div className="grid flex-1 gap-6 py-8 lg:grid-cols-[300px_minmax(0,1fr)] lg:items-stretch">
-          <section className="lg:sticky lg:top-24 lg:self-start lg:min-h-full lg:border-r lg:border-zinc-700/60 lg:pr-6">
+        <div className="grid flex-1 gap-4 py-6 sm:gap-5 sm:py-7 lg:gap-6 lg:py-8 lg:grid-cols-[300px_minmax(0,1fr)] lg:items-stretch">
+          <section className="px-4 sm:px-6 lg:sticky lg:top-24 lg:self-start lg:min-h-full lg:border-r lg:border-zinc-700/60 lg:px-0 lg:pr-6">
             <p className="muted text-xs font-semibold uppercase tracking-[0.18em]">
               Workspace
             </p>
@@ -474,7 +474,7 @@ export default function Dashboard({ displayName }: { displayName: string }) {
               ))}
             </div>
           </section>
-          <section className="panel relative min-h-0 min-w-0 p-4 sm:min-h-[620px] sm:p-8">
+          <section className="panel relative min-h-0 min-w-0 p-4 sm:min-h-[620px] sm:p-6 lg:p-8">
             {selected ? (
               <>
                 <p className="muted text-xs font-semibold uppercase tracking-wider">
@@ -754,7 +754,7 @@ export default function Dashboard({ displayName }: { displayName: string }) {
                         onClick={() => jsonFileRef.current?.click()}
                       >
                         <Upload size={15} aria-hidden="true" />
-                        Import JSON
+                        Import
                       </button>
                       <button
                         type="button"
@@ -781,7 +781,7 @@ export default function Dashboard({ displayName }: { displayName: string }) {
                         }}
                       >
                         <Download size={15} aria-hidden="true" />
-                        Download JSON
+                        Download
                       </button>
                       <button
                         type="button"
@@ -803,7 +803,7 @@ export default function Dashboard({ displayName }: { displayName: string }) {
                         }}
                       >
                         <Braces size={15} aria-hidden="true" />
-                        Format JSON
+                        Format
                       </button>
                     </div>
                     <button className="btn">
