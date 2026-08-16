@@ -20,7 +20,11 @@ import {
 type Project = {
   id: string;
   publicId: string;
-  owner: { apiKey: string | null };
+  owner: {
+    apiKeyLast4: string | null;
+    apiKeyCreatedAt: string | null;
+    apiKeyRevokedAt: string | null;
+  };
   slug: string | null;
   name: string;
   description: string | null;
@@ -50,6 +54,8 @@ function resourceName(path: string) {
 export default function Dashboard({ displayName }: { displayName: string }) {
   const [projects, setProjects] = useState<Project[]>([]),
     [apiKey, setApiKey] = useState<string | null>(null),
+    [apiKeyExpiresAt, setApiKeyExpiresAt] = useState<string | null>(null),
+    [health, setHealth] = useState<"healthy" | "slow" | "error">("healthy"),
     [name, setName] = useState(""),
     [projectSearch, setProjectSearch] = useState(""),
     [selected, setSelected] = useState<Project | null>(null),
@@ -70,10 +76,25 @@ export default function Dashboard({ displayName }: { displayName: string }) {
   const responseRef = useRef<HTMLTextAreaElement>(null);
   const jsonFileRef = useRef<HTMLInputElement>(null);
   const load = async () => {
-    const response = await fetch("/api/projects");
-    const data = await response.json();
-    setProjects(data);
-    if (data[0]?.owner?.apiKey) setApiKey(data[0].owner.apiKey);
+    const started = performance.now();
+    try {
+      const response = await fetch("/api/projects");
+      if (!response.ok) throw new Error("Could not load projects");
+      const data = await response.json();
+      setProjects(data);
+      setHealth(performance.now() - started > 800 ? "slow" : "healthy");
+      if (data[0]?.owner?.apiKeyCreatedAt) {
+        setApiKeyExpiresAt(
+          new Date(
+            new Date(data[0].owner.apiKeyCreatedAt).getTime() +
+              7 * 24 * 60 * 60 * 1000,
+          ).toISOString(),
+        );
+      }
+    } catch {
+      setHealth("error");
+      setMessage("Could not load workspace data.");
+    }
   };
   useEffect(() => {
     void load();
@@ -294,9 +315,44 @@ export default function Dashboard({ displayName }: { displayName: string }) {
         </header>
         <div className="grid flex-1 gap-4 pb-6 pt-3 sm:gap-5 sm:pb-7 sm:pt-4 lg:gap-6 lg:py-8 lg:grid-cols-[300px_minmax(0,1fr)] lg:items-stretch">
           <section className="w-full min-w-0 rounded-2xl border border-zinc-800/90 p-4 sm:p-6 lg:sticky lg:top-24 lg:self-start lg:min-h-full lg:p-4">
-            <p className="muted text-xs font-semibold uppercase tracking-[0.18em]">
-              Workspace
-            </p>
+            <div className="flex items-center justify-between gap-3">
+              <p className="muted text-xs font-semibold uppercase tracking-[0.18em]">
+                Workspace
+              </p>
+              <span
+                className={
+                  "inline-flex items-center gap-1.5 text-[11px] font-semibold " +
+                  (health === "healthy"
+                    ? "text-emerald-400"
+                    : health === "slow"
+                      ? "text-amber-400"
+                      : "text-red-400")
+                }
+                title={
+                  health === "healthy"
+                    ? "Workspace healthy"
+                    : health === "slow"
+                      ? "Workspace response is slow"
+                      : "Workspace has an error"
+                }
+              >
+                <span
+                  className={
+                    "size-2 rounded-full " +
+                    (health === "healthy"
+                      ? "bg-emerald-400"
+                      : health === "slow"
+                        ? "bg-amber-400"
+                        : "bg-red-400")
+                  }
+                />
+                {health === "healthy"
+                  ? "Healthy"
+                  : health === "slow"
+                    ? "Slow"
+                    : "Error"}
+              </span>
+            </div>
             <div className="border-b-2 border-zinc-700 pb-4">
               <h1 className="mt-1 text-2xl font-bold tracking-tight">
                 Your APIs
@@ -322,6 +378,11 @@ export default function Dashboard({ displayName }: { displayName: string }) {
               <p className="muted mt-1 text-xs">
                 Use this key for all your mock APIs.
               </p>
+              {apiKeyExpiresAt && (
+                <p className="mt-1 text-[11px] text-amber-300/80">
+                  Expires {new Date(apiKeyExpiresAt).toLocaleDateString()}
+                </p>
+              )}
               <div className="mt-2 min-w-0 max-w-full overflow-hidden">
                 <code className="block min-w-0 max-w-full overflow-hidden text-ellipsis whitespace-nowrap text-xs text-amber-100">
                   {apiKey
@@ -346,6 +407,7 @@ export default function Dashboard({ displayName }: { displayName: string }) {
                     }
                     const generated = await response.json();
                     setApiKey(generated.apiKey);
+                    setApiKeyExpiresAt(generated.expiresAt);
                     await load();
                     setMessage("API key generated.");
                   }}

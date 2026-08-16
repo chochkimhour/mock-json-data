@@ -6,7 +6,10 @@ import { randomInt } from "crypto";
 
 const shortIdAlphabet = "abcdefghijklmnopqrstuvwxyz0123456789";
 function createShortId(length = 6) {
-  return Array.from({ length }, () => shortIdAlphabet[randomInt(shortIdAlphabet.length)]).join("");
+  return Array.from(
+    { length },
+    () => shortIdAlphabet[randomInt(shortIdAlphabet.length)],
+  ).join("");
 }
 export async function GET() {
   const user = await currentUser();
@@ -16,7 +19,16 @@ export async function GET() {
   return NextResponse.json(
     await db.project.findMany({
       where: { ownerId: user.id },
-      include: { owner: { select: { apiKey: true } }, _count: { select: { endpoints: true, logs: true } } },
+      include: {
+        owner: {
+          select: {
+            apiKeyLast4: true,
+            apiKeyCreatedAt: true,
+            apiKeyRevokedAt: true,
+          },
+        },
+        _count: { select: { endpoints: true, logs: true } },
+      },
       orderBy: { updatedAt: "desc" },
     }),
   );
@@ -39,7 +51,14 @@ export async function POST(req: NextRequest) {
     slug = `${baseSlug}-${createShortId()}`;
   }
   return NextResponse.json(
-    await db.project.create({ data: { ...data.data, slug, ownerId: user.id, expiresAt: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000) } }),
+    await db.project.create({
+      data: {
+        ...data.data,
+        slug,
+        ownerId: user.id,
+        expiresAt: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
+      },
+    }),
     { status: 201 },
   );
 }

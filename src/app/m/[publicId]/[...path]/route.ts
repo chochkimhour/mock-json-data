@@ -4,6 +4,8 @@ import { matchPath } from "@/lib/routing";
 import { renderTemplate } from "@/lib/templates";
 import { safeHeaders } from "@/lib/validation";
 import { schemaToZod } from "@/lib/schema";
+import { rateLimit } from "@/lib/rate-limit";
+import { hashApiKey } from "@/lib/api-key";
 type RuntimeScenario = {
   slug: string;
   isDefault: boolean;
@@ -36,6 +38,7 @@ const CORS = {
   "Access-Control-Expose-Headers": "x-request-id",
 };
 function jsonEnvelope(data: unknown, status: number, message: string) {
+  const requestId = crypto.randomUUID();
   const existing =
     data && typeof data === "object" && !Array.isArray(data)
       ? (data as Record<string, unknown>)
@@ -57,7 +60,10 @@ function jsonEnvelope(data: unknown, status: number, message: string) {
           data: data ?? null,
           timestamp: new Date().toISOString(),
         };
-  return NextResponse.json(payload, { status, headers: CORS });
+  return NextResponse.json(payload, {
+    status,
+    headers: { ...CORS, "x-request-id": requestId },
+  });
 }
 async function handle(
   request: NextRequest,
@@ -65,6 +71,10 @@ async function handle(
 ) {
   const started = Date.now(),
     { publicId, path } = await context.params;
+  const address =
+    request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ?? "unknown";
+  if (!rateLimit(`public:${address}:${publicId}`, 120, 60_000).allowed)
+    return jsonEnvelope(null, 429, "Too many requests. Try again shortly.");
   if (request.method === "OPTIONS")
     return new NextResponse(null, { status: 204, headers: CORS });
   const project = await db.project.findUnique({
@@ -74,7 +84,13 @@ async function handle(
       visibility: true,
       expiresAt: true,
       logRequestBodies: true,
-      owner: { select: { apiKey: true } },
+      owner: {
+        select: {
+          apiKeyHash: true,
+          apiKeyCreatedAt: true,
+          apiKeyRevokedAt: true,
+        },
+      },
       endpoints: {
         where: { enabled: true },
         select: {
@@ -113,7 +129,15 @@ async function handle(
   const suppliedKey =
     request.headers.get("x-api-key") ??
     request.headers.get("authorization")?.replace(/^Bearer\s+/i, "");
-  if (!suppliedKey || suppliedKey !== project.owner.apiKey)
+  if (
+    !suppliedKey ||
+    !project.owner.apiKeyHash ||
+    project.owner.apiKeyRevokedAt ||
+    !project.owner.apiKeyCreatedAt ||
+    project.owner.apiKeyCreatedAt.getTime() + 7 * 24 * 60 * 60 * 1000 <=
+      Date.now() ||
+    hashApiKey(suppliedKey) !== project.owner.apiKeyHash
+  )
     return jsonEnvelope(null, 401, "A valid API key is required");
   const endpoints = project.endpoints as RuntimeEndpoint[];
   const urlPath = "/" + path.join("/");

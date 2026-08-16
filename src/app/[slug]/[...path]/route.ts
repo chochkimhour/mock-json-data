@@ -33,9 +33,13 @@ async function handle(
     body,
     redirect: "manual",
   });
+  const headers = new Headers(response.headers);
+  headers.delete("content-encoding");
+  headers.delete("content-length");
+  headers.delete("transfer-encoding");
   return new NextResponse(response.body, {
     status: response.status,
-    headers: response.headers,
+    headers,
   });
 }
 

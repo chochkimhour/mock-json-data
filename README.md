@@ -53,13 +53,13 @@ Open http://localhost:3000.
 
 ## Environment variables
 
-| Variable | Description |
-| --- | --- |
-| DATABASE_URL | PostgreSQL connection string |
-| AUTH_SECRET | Long random authentication secret |
-| NEXT_PUBLIC_APP_URL | Public application URL |
-| DEMO_USERNAME | Optional seed username |
-| DEMO_PASSWORD | Optional seed password |
+| Variable            | Description                       |
+| ------------------- | --------------------------------- |
+| DATABASE_URL        | PostgreSQL connection string      |
+| AUTH_SECRET         | Long random authentication secret |
+| NEXT_PUBLIC_APP_URL | Public application URL            |
+| DEMO_USERNAME       | Optional seed username            |
+| DEMO_PASSWORD       | Optional seed password            |
 
 Never commit .env. Keep .env.example safe for GitHub.
 
@@ -74,6 +74,22 @@ Never commit .env. Keep .env.example safe for GitHub.
 Public URLs use this format:
 
     https://your-domain.com/api/sms-a9dhds/users
+
+### Postman
+
+Create a new `GET` request using the public URL, for example:
+
+    https://your-domain.com/api/sms-a9dhds/users
+
+In the request **Headers** tab, add:
+
+| Key         | Value              |
+| ----------- | ------------------ |
+| `X-API-Key` | `mjd_your_api_key` |
+
+For an API with no matching endpoint, the server returns a JSON `404` response. The API key is required for every public request. You can also use:
+
+    Authorization: Bearer mjd_your_api_key
 
 Every request requires the user API key:
 

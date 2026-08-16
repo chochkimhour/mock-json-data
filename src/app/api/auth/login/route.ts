@@ -3,7 +3,15 @@ import bcrypt from "bcryptjs";
 import { z } from "zod";
 import { db } from "@/lib/db";
 import { createSession } from "@/lib/auth";
+import { rateLimit } from "@/lib/rate-limit";
 export async function POST(req: NextRequest) {
+  const address =
+    req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ?? "unknown";
+  if (!rateLimit(`login:${address}`, 10, 60_000).allowed)
+    return NextResponse.json(
+      { error: "Too many login attempts. Try again shortly." },
+      { status: 429 },
+    );
   const data = z
     .object({
       username: z.string().min(1),
