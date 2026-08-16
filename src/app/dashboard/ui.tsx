@@ -416,7 +416,7 @@ export default function Dashboard({ displayName }: { displayName: string }) {
             )}
             <div className="thin-scrollbar project-list-scroll -my-2 mt-5 grid max-h-[620px] gap-3 overflow-y-auto px-1 py-2">
               {projects.length === 0 && (
-                <div className="panel p-5">
+                <div className="panel col-span-full w-full p-5">
                   <b>No APIs yet.</b>
                   <p className="muted mt-1 text-sm">
                     Create an API, then add users, products, or orders.
@@ -424,7 +424,7 @@ export default function Dashboard({ displayName }: { displayName: string }) {
                 </div>
               )}
               {projects.length > 0 && filteredProjects.length === 0 && (
-                <div className="panel p-5 text-center">
+                <div className="panel col-span-full w-full p-5 text-center">
                   <b>No projects found.</b>
                   <p className="muted mt-1 text-sm">
                     Try a different project name.
