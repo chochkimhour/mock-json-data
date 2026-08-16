@@ -1,5 +1,14 @@
 # Mock JSON Data
 
+![Next.js](https://img.shields.io/badge/Next.js-15-000000?logo=next.js&logoColor=white)
+![React](https://img.shields.io/badge/React-19-61DAFB?logo=react&logoColor=20232A)
+![TypeScript](https://img.shields.io/badge/TypeScript-5.8-3178C6?logo=typescript&logoColor=white)
+![Prisma](https://img.shields.io/badge/Prisma-ORM-2D3748?logo=prisma&logoColor=white)
+![PostgreSQL](https://img.shields.io/badge/PostgreSQL-Database-4169E1?logo=postgresql&logoColor=white)
+![Tailwind CSS](https://img.shields.io/badge/Tailwind_CSS-3.4-06B6D4?logo=tailwindcss&logoColor=white)
+![Vercel](https://img.shields.io/badge/Vercel-Ready-000000?logo=vercel&logoColor=white)
+![License](https://img.shields.io/badge/License-MIT-green)
+
 Create realistic REST API mocks before your backend is ready. Organize resources in one API, return predictable JSON, test CRUD flows, and share a public endpoint.
 
 Built with Next.js App Router, Prisma, PostgreSQL, Zod, and Tailwind CSS.
@@ -8,7 +17,7 @@ Built with Next.js App Router, Prisma, PostgreSQL, Zod, and Tailwind CSS.
 
 - Username/password authentication with bcrypt and secure HTTP-only sessions
 - Public and private mock APIs
-- GET, POST, PUT, PATCH, and DELETE endpoints
+- GET endpoints for collections and individual records
 - Static responses and stateful CRUD data
 - Request validation, scenarios, templates, delays, CORS, and request logs
 - Dynamic values including uuid, datetime, request fields, route params, and query values
