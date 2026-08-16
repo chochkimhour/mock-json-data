@@ -82,19 +82,7 @@ export default function Dashboard({ displayName }: { displayName: string }) {
       if (!response.ok) throw new Error("Could not load projects");
       const data = await response.json();
       setProjects(data);
-      setHealth(performance.now() - started > 800 ? "slow" : "healthy");
-      if (
-        data[0]?.owner?.apiKeyLast4 &&
-        !data[0]?.owner?.apiKeyRevokedAt &&
-        data[0]?.owner?.apiKeyCreatedAt
-      ) {
-        setApiKeyExpiresAt(
-          new Date(
-            new Date(data[0].owner.apiKeyCreatedAt).getTime() +
-              7 * 24 * 60 * 60 * 1000,
-          ).toISOString(),
-        );
-      }
+      setHealth(performance.now() - started > 1500 ? "slow" : "healthy");
     } catch {
       setHealth("error");
       setMessage("Could not load workspace data.");
@@ -141,6 +129,20 @@ export default function Dashboard({ displayName }: { displayName: string }) {
       .then((response) => response.json())
       .then((data) => setEndpoints(Array.isArray(data) ? data : []));
   }, [selected]);
+  useEffect(() => {
+    if (!responseRef.current) return;
+    responseRef.current.value = JSON.stringify(
+      selectedEndpoint?.responseBody ?? {
+        status: 200,
+        success: true,
+        message: "Request successful",
+        data: {},
+        timestamp: "{{datetime}}",
+      },
+      null,
+      2,
+    );
+  }, [selectedEndpoint]);
   async function create() {
     if (!name.trim()) return;
     const r = await fetch("/api/projects", {
@@ -240,12 +242,10 @@ export default function Dashboard({ displayName }: { displayName: string }) {
     await navigator.clipboard.writeText(parsed.toString());
     setMessage("Endpoint URL copied.");
   }
-  const resources = Array.from(
-    new Set(endpoints.map((item) => resourceName(item.path))),
-  );
   const getEndpoints = endpoints.filter((item) => item.method === "GET");
+  const resources = Array.from(new Set(getEndpoints.map((item) => item.name)));
   const visibleEndpoints = resource
-    ? getEndpoints.filter((item) => resourceName(item.path) === resource)
+    ? getEndpoints.filter((item) => item.name === resource)
     : getEndpoints;
   const filteredEndpoints = method
     ? visibleEndpoints.filter((item) => item.method === method)
@@ -606,7 +606,10 @@ export default function Dashboard({ displayName }: { displayName: string }) {
                     <div className="mt-4 flex flex-wrap gap-2">
                       <button
                         type="button"
-                        onClick={() => setResource(null)}
+                        onClick={() => {
+                          setResource(null);
+                          setSelectedEndpoint(null);
+                        }}
                         className={
                           "border px-3 py-1.5 text-sm " +
                           (!resource
@@ -620,7 +623,10 @@ export default function Dashboard({ displayName }: { displayName: string }) {
                         <button
                           type="button"
                           key={item}
-                          onClick={() => setResource(item)}
+                          onClick={() => {
+                            setResource(item);
+                            setSelectedEndpoint(null);
+                          }}
                           className={
                             "border px-3 py-1.5 text-sm capitalize " +
                             (resource === item
@@ -646,7 +652,7 @@ export default function Dashboard({ displayName }: { displayName: string }) {
                           className={
                             "rounded border px-3 py-1.5 text-xs font-bold " +
                             (method === item
-                              ? "border-indigo-400 bg-indigo-500/15 text-indigo-200"
+                              ? "border-emerald-400 bg-emerald-500/20 text-emerald-200"
                               : methodStyle[item])
                           }
                         >
@@ -660,11 +666,15 @@ export default function Dashboard({ displayName }: { displayName: string }) {
                           <button
                             type="button"
                             key={item.id}
-                            onClick={() => setSelectedEndpoint(item)}
+                            onClick={() =>
+                              setSelectedEndpoint(
+                                selectedEndpoint?.id === item.id ? null : item,
+                              )
+                            }
                             className={
-                              "flex w-full items-center gap-3 border-b border-zinc-800 px-4 py-3 text-left last:border-0 hover:bg-zinc-800/50 " +
+                              "flex w-full items-center gap-3 px-4 py-3 text-left focus:outline-none focus:ring-0 hover:bg-zinc-800/50 " +
                               (selectedEndpoint?.id === item.id
-                                ? "bg-indigo-500/10"
+                                ? "border-l-2 border-l-emerald-400 bg-emerald-500/10"
                                 : "")
                             }
                           >
@@ -684,9 +694,6 @@ export default function Dashboard({ displayName }: { displayName: string }) {
                                 {item.name}
                               </p>
                             </div>
-                            <span className="muted text-xs">
-                              {item.statusCode}
-                            </span>
                           </button>
                         ))
                       ) : (
@@ -710,9 +717,6 @@ export default function Dashboard({ displayName }: { displayName: string }) {
                           <code className="min-w-0 break-all text-sm">
                             {selectedEndpoint.path}
                           </code>
-                          <span className="muted ml-auto text-xs">
-                            Status {selectedEndpoint.statusCode}
-                          </span>
                         </div>
                         <div className="mt-3 flex items-center justify-between">
                           <p className="muted text-xs font-semibold uppercase tracking-wider">
@@ -742,15 +746,34 @@ export default function Dashboard({ displayName }: { displayName: string }) {
                     )}
                   </div>
                   <form
+                    key={selectedEndpoint?.id ?? "new-endpoint"}
                     onSubmit={endpoint}
                     className="grid gap-3 rounded-lg border border-zinc-800 bg-zinc-950/40 p-4"
                   >
-                    <div>
-                      <h3 className="font-semibold">Add GET endpoint</h3>
-                      <p className="muted mt-1 text-sm">
-                        Use <code>/users</code> for a collection or{" "}
-                        <code>/users/:id</code> for one item.
-                      </p>
+                    <div className="flex items-start justify-between gap-3">
+                      <div>
+                        <h3 className="font-semibold">
+                          {selectedEndpoint
+                            ? "Edit GET endpoint"
+                            : "Add GET endpoint"}
+                        </h3>
+                        <p className="muted mt-1 text-sm">
+                          Use <code>/users</code> for a collection or{" "}
+                          <code>/users/:id</code> for one item.
+                        </p>
+                      </div>
+                      {selectedEndpoint && (
+                        <button
+                          type="button"
+                          className="shrink-0 border border-zinc-700 px-2.5 py-1.5 text-xs"
+                          onClick={(event) => {
+                            event.currentTarget.form?.reset();
+                            setSelectedEndpoint(null);
+                          }}
+                        >
+                          New endpoint
+                        </button>
+                      )}
                     </div>
                     <input
                       name="endpointName"
