@@ -69,7 +69,40 @@ async function handle(
     return new NextResponse(null, { status: 204, headers: CORS });
   const project = await db.project.findUnique({
     where: { publicId },
-    include: { owner: { select: { apiKey: true } }, endpoints: { where: { enabled: true }, include: { scenarios: true } } },
+    select: {
+      id: true,
+      visibility: true,
+      expiresAt: true,
+      logRequestBodies: true,
+      owner: { select: { apiKey: true } },
+      endpoints: {
+        where: { enabled: true },
+        select: {
+          id: true,
+          method: true,
+          path: true,
+          requestSchema: true,
+          responseBody: true,
+          responseHeaders: true,
+          statusCode: true,
+          delayMs: true,
+          mode: true,
+          stateData: true,
+          seedData: true,
+          scenarios: {
+            select: {
+              slug: true,
+              isDefault: true,
+              responseBody: true,
+              responseHeaders: true,
+              statusCode: true,
+              delayMs: true,
+              mode: true,
+            },
+          },
+        },
+      },
+    },
   });
   if (!project || project.visibility !== "PUBLIC")
     return jsonEnvelope(null, 404, "Mock project not found");
@@ -77,7 +110,9 @@ async function handle(
     await db.project.delete({ where: { id: project.id } });
     return jsonEnvelope(null, 404, "Mock project expired");
   }
-  const suppliedKey = request.headers.get("x-api-key") ?? request.headers.get("authorization")?.replace(/^Bearer\s+/i, "");
+  const suppliedKey =
+    request.headers.get("x-api-key") ??
+    request.headers.get("authorization")?.replace(/^Bearer\s+/i, "");
   if (!suppliedKey || suppliedKey !== project.owner.apiKey)
     return jsonEnvelope(null, 401, "A valid API key is required");
   const endpoints = project.endpoints as RuntimeEndpoint[];
