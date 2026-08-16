@@ -729,7 +729,7 @@ export default function Dashboard({ displayName }: { displayName: string }) {
                       />
                       <button
                         type="button"
-                        className="order-2 inline-flex w-fit items-center gap-1.5 border border-zinc-700 px-3 py-2 text-sm"
+                        className="order-2 inline-flex max-w-full w-fit items-center gap-1 px-2 py-2 text-xs whitespace-nowrap sm:gap-1.5 sm:px-3 sm:text-sm"
                         onClick={() => jsonFileRef.current?.click()}
                       >
                         <Upload size={15} aria-hidden="true" />
@@ -737,7 +737,7 @@ export default function Dashboard({ displayName }: { displayName: string }) {
                       </button>
                       <button
                         type="button"
-                        className="order-1 inline-flex w-fit items-center gap-1.5 border border-zinc-700 px-3 py-2 text-sm"
+                        className="order-1 inline-flex max-w-full w-fit items-center gap-1 px-2 py-2 text-xs whitespace-nowrap sm:gap-1.5 sm:px-3 sm:text-sm"
                         onClick={() => {
                           const example = {
                             status: 200,
@@ -764,7 +764,7 @@ export default function Dashboard({ displayName }: { displayName: string }) {
                       </button>
                       <button
                         type="button"
-                        className="order-3 inline-flex w-fit items-center gap-1.5 border border-zinc-700 px-3 py-2 text-sm"
+                        className="order-3 inline-flex max-w-full w-fit items-center gap-1 px-2 py-2 text-xs whitespace-nowrap sm:gap-1.5 sm:px-3 sm:text-sm"
                         onClick={() => {
                           if (!responseRef.current) return;
                           try {
