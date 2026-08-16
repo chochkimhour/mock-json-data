@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { Clock3 } from "lucide-react";
 import ThemeToggle from "./theme-toggle";
 export default function Home() {
   return (
@@ -22,6 +23,10 @@ export default function Home() {
             Design, test, and share realistic REST API mocks in seconds. Static
             responses, stateful CRUD, scenarios, validation, and a real URL.
           </p>
+          <div className="mt-5 flex max-w-lg items-start gap-2.5 border-l-2 border-orange-400/70 pl-3 text-xs leading-5 text-zinc-400">
+            <Clock3 className="mt-0.5 shrink-0 text-orange-300" size={15} aria-hidden="true" />
+            <p><span className="font-semibold text-zinc-200">30-day retention.</span> Mock APIs are automatically deleted after 30 days.</p>
+          </div>
           <div className="mt-7 flex flex-wrap gap-3">
             <Link className="btn" href="/login">
               Create a Mock API
