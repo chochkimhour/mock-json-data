@@ -4,5 +4,5 @@ import DashboardClient from "./ui";
 export default async function Dashboard() {
   const user = await currentUser();
   if (!user) redirect("/login");
-  return <DashboardClient username={user.username} />;
+  return <DashboardClient displayName={user.name || user.username} />;
 }

@@ -35,8 +35,8 @@ export default function Home() {
             <Typewriter />
           </h1>
           <p className="muted mt-5 max-w-lg text-base leading-7 sm:text-lg">
-            Design, test, and share realistic REST API mocks in seconds. Static
-            responses, stateful CRUD, scenarios, validation, and a real URL.
+            Design, test, and share realistic GET API mocks in seconds—with
+            custom JSON responses, scenarios, validation, and a live URL.
           </p>
           <div className="mt-5 flex max-w-lg items-start gap-2.5 border-l-2 border-orange-400/70 pl-3 text-xs leading-5 text-zinc-400">
             <Clock3

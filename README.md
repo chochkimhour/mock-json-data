@@ -13,6 +13,16 @@ Create realistic GET API mocks before your backend is ready. Organize resources 
 
 Built with Next.js App Router, Prisma, PostgreSQL, Zod, and Tailwind CSS.
 
+## Tech Stack
+
+- Next.js 15 with the App Router
+- React 19 and TypeScript
+- Tailwind CSS 3.4 and Lucide React
+- Prisma ORM with PostgreSQL/Neon
+- Zod for validation
+- bcryptjs and HTTP-only cookies for authentication
+- Vercel for deployment
+
 ## Features
 
 - Username/password authentication with bcrypt and secure HTTP-only sessions

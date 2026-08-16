@@ -4,6 +4,7 @@ import { createPortal } from "react-dom";
 import {
   Copy,
   CheckCircle2,
+  Download,
   Eye,
   EyeOff,
   Info,
@@ -12,6 +13,8 @@ import {
   Plus,
   Sun,
   Trash2,
+  Upload,
+  Braces,
   X,
 } from "lucide-react";
 type Project = {
@@ -44,8 +47,9 @@ const methodStyle: Record<string, string> = {
 function resourceName(path: string) {
   return path.split("/").filter(Boolean)[0]?.replace(/[-_]/g, " ") ?? "root";
 }
-export default function Dashboard({ username }: { username: string }) {
+export default function Dashboard({ displayName }: { displayName: string }) {
   const [projects, setProjects] = useState<Project[]>([]),
+    [apiKey, setApiKey] = useState<string | null>(null),
     [name, setName] = useState(""),
     [selected, setSelected] = useState<Project | null>(null),
     [endpoints, setEndpoints] = useState<Endpoint[]>([]),
@@ -63,9 +67,12 @@ export default function Dashboard({ username }: { username: string }) {
     [showApiKey, setShowApiKey] = useState(false),
     [showTop, setShowTop] = useState(false);
   const responseRef = useRef<HTMLTextAreaElement>(null);
+  const jsonFileRef = useRef<HTMLInputElement>(null);
   const load = async () => {
     const response = await fetch("/api/projects");
-    setProjects(await response.json());
+    const data = await response.json();
+    setProjects(data);
+    if (data[0]?.owner?.apiKey) setApiKey(data[0].owner.apiKey);
   };
   useEffect(() => {
     void load();
@@ -237,10 +244,10 @@ export default function Dashboard({ username }: { username: string }) {
               />
             </span>
             <span
-              title={username}
+              title={displayName}
               className="max-w-[7rem] truncate text-sm font-semibold text-zinc-200 sm:max-w-[14rem]"
             >
-              {username}
+              {displayName}
             </span>
           </div>
           <span
@@ -313,11 +320,11 @@ export default function Dashboard({ username }: { username: string }) {
               </p>
               <div className="mt-2 min-w-0 max-w-full overflow-hidden">
                 <code className="block min-w-0 max-w-full overflow-hidden text-ellipsis whitespace-nowrap text-xs text-amber-100">
-                  {projects[0]?.owner.apiKey
+                  {apiKey
                     ? showApiKey
-                      ? projects[0].owner.apiKey
-                      : "*".repeat(projects[0].owner.apiKey.length)
-                    : "Loading..."}
+                      ? apiKey
+                      : "*".repeat(apiKey.length)
+                    : "No API key"}
                 </code>
               </div>
               <div className="mt-2 flex flex-nowrap gap-2">
@@ -333,6 +340,8 @@ export default function Dashboard({ username }: { username: string }) {
                       setMessage(body?.error ?? "Could not generate API key.");
                       return;
                     }
+                    const generated = await response.json();
+                    setApiKey(generated.apiKey);
                     await load();
                     setMessage("API key generated.");
                   }}
@@ -344,7 +353,7 @@ export default function Dashboard({ username }: { username: string }) {
                   type="button"
                   title={showApiKey ? "Hide API key" : "Show API key"}
                   aria-label={showApiKey ? "Hide API key" : "Show API key"}
-                  disabled={!projects[0]?.owner.apiKey}
+                  disabled={!apiKey}
                   className="inline-flex h-7 w-7 min-w-7 max-w-7 shrink-0 items-center justify-center border border-amber-500/40 p-0"
                   onClick={() => setShowApiKey((value) => !value)}
                 >
@@ -354,12 +363,12 @@ export default function Dashboard({ username }: { username: string }) {
                   type="button"
                   title="Copy API key"
                   aria-label="Copy API key"
-                  disabled={!projects[0]?.owner.apiKey}
+                  disabled={!apiKey}
                   className="inline-flex size-7 items-center justify-center border border-amber-500/40"
                   onClick={() =>
-                    projects[0]?.owner.apiKey &&
+                    apiKey &&
                     navigator.clipboard
-                      .writeText(projects[0].owner.apiKey)
+                      .writeText(apiKey)
                       .then(() => setMessage("API key copied."))
                   }
                 >
@@ -369,7 +378,7 @@ export default function Dashboard({ username }: { username: string }) {
                   type="button"
                   title="Delete API key"
                   aria-label="Delete API key"
-                  disabled={!projects[0]?.owner.apiKey}
+                  disabled={!apiKey}
                   className="inline-flex size-7 items-center justify-center border border-red-500/40 text-red-300"
                   onClick={() => setConfirmApiKeyDelete(true)}
                 >
@@ -691,27 +700,91 @@ export default function Dashboard({ username }: { username: string }) {
                         2,
                       )}
                     />
-                    <button
-                      type="button"
-                      className="w-fit border border-zinc-700 px-3 py-2 text-sm"
-                      onClick={() => {
-                        if (!responseRef.current) return;
-                        try {
-                          responseRef.current.value = JSON.stringify(
-                            JSON.parse(responseRef.current.value),
-                            null,
-                            2,
+                    <div className="flex flex-wrap gap-2">
+                      <input
+                        ref={jsonFileRef}
+                        type="file"
+                        accept=".json,application/json"
+                        className="hidden"
+                        onChange={async (event) => {
+                          const file = event.target.files?.[0];
+                          event.target.value = "";
+                          if (!file || !responseRef.current) return;
+                          if (file.size > 2_000_000) {
+                            setMessage("JSON file must be smaller than 2 MB.");
+                            return;
+                          }
+                          try {
+                            const parsed = JSON.parse(await file.text());
+                            responseRef.current.value = JSON.stringify(
+                              parsed,
+                              null,
+                              2,
+                            );
+                            setMessage("JSON imported.");
+                          } catch {
+                            setMessage("The selected file is not valid JSON.");
+                          }
+                        }}
+                      />
+                      <button
+                        type="button"
+                        className="order-2 inline-flex w-fit items-center gap-1.5 border border-zinc-700 px-3 py-2 text-sm"
+                        onClick={() => jsonFileRef.current?.click()}
+                      >
+                        <Upload size={15} aria-hidden="true" />
+                        Import JSON
+                      </button>
+                      <button
+                        type="button"
+                        className="order-1 inline-flex w-fit items-center gap-1.5 border border-zinc-700 px-3 py-2 text-sm"
+                        onClick={() => {
+                          const example = {
+                            status: 200,
+                            success: true,
+                            message: "Request successful",
+                            data: {},
+                            timestamp: "{{datetime}}",
+                          };
+                          const url = URL.createObjectURL(
+                            new Blob([JSON.stringify(example, null, 2)], {
+                              type: "application/json",
+                            }),
                           );
-                          setMessage("JSON formatted.");
-                        } catch {
-                          setMessage(
-                            "Response must be valid JSON before formatting.",
-                          );
-                        }
-                      }}
-                    >
-                      Format JSON
-                    </button>
+                          const link = document.createElement("a");
+                          link.href = url;
+                          link.download = "mock-api-example.json";
+                          link.click();
+                          URL.revokeObjectURL(url);
+                          setMessage("Example JSON downloaded.");
+                        }}
+                      >
+                        <Download size={15} aria-hidden="true" />
+                        Download JSON
+                      </button>
+                      <button
+                        type="button"
+                        className="order-3 inline-flex w-fit items-center gap-1.5 border border-zinc-700 px-3 py-2 text-sm"
+                        onClick={() => {
+                          if (!responseRef.current) return;
+                          try {
+                            responseRef.current.value = JSON.stringify(
+                              JSON.parse(responseRef.current.value),
+                              null,
+                              2,
+                            );
+                            setMessage("JSON formatted.");
+                          } catch {
+                            setMessage(
+                              "Response must be valid JSON before formatting.",
+                            );
+                          }
+                        }}
+                      >
+                        <Braces size={15} aria-hidden="true" />
+                        Format JSON
+                      </button>
+                    </div>
                     <button className="btn">
                       {selectedEndpoint ? "Update endpoint" : "Add endpoint"}
                     </button>
@@ -728,17 +801,17 @@ export default function Dashboard({ username }: { username: string }) {
             {message && typeof document !== "undefined"
               ? createPortal(
                   <div
-                    className="fixed right-5 top-5 z-50 w-[calc(100%-2.5rem)] max-w-sm"
+                    className="fixed bottom-5 right-4 top-auto z-50 w-auto max-w-[calc(100%-2rem)] sm:bottom-6 sm:right-6 sm:max-w-sm"
                     role="status"
                     aria-live="polite"
                   >
-                    <div className="flex items-start gap-3 rounded-xl border border-emerald-400/30 bg-zinc-900/95 px-4 py-3 text-sm text-emerald-200 shadow-2xl shadow-black/30 backdrop-blur-xl">
+                    <div className="dashboard-toast flex w-fit max-w-full items-start gap-3 rounded-xl border border-emerald-400/30 bg-zinc-900/95 px-4 py-3 text-sm text-emerald-200 shadow-2xl shadow-black/30 backdrop-blur-xl">
                       <CheckCircle2
                         className="mt-0.5 shrink-0 text-emerald-400"
                         size={18}
                         aria-hidden="true"
                       />
-                      <p className="min-w-0 flex-1 break-words leading-5">
+                      <p className="min-w-0 max-w-[calc(100vw-8rem)] flex-1 break-words leading-5">
                         {message}
                       </p>
                       <button
@@ -776,7 +849,7 @@ export default function Dashboard({ username }: { username: string }) {
       )}
       {deleteTarget && (
         <div className="fixed inset-0 z-[60] grid place-items-center bg-black/60 px-5 backdrop-blur-sm">
-          <div className="w-full max-w-sm rounded-2xl border border-red-400/30 bg-zinc-900 p-6 shadow-2xl">
+          <div className="danger-modal w-full max-w-sm rounded-2xl border border-red-400/30 bg-zinc-900 p-6 shadow-2xl">
             <p className="text-xs font-semibold uppercase tracking-widest text-red-300">
               Delete API
             </p>
@@ -819,7 +892,7 @@ export default function Dashboard({ username }: { username: string }) {
       )}
       {endpointDeleteTarget && (
         <div className="fixed inset-0 z-[60] grid place-items-center bg-black/60 px-5 backdrop-blur-sm">
-          <div className="w-full max-w-sm rounded-2xl border border-red-400/30 bg-zinc-900 p-6 shadow-2xl">
+          <div className="danger-modal w-full max-w-sm rounded-2xl border border-red-400/30 bg-zinc-900 p-6 shadow-2xl">
             <p className="text-xs font-semibold uppercase tracking-widest text-red-300">
               Delete endpoint
             </p>
@@ -851,7 +924,7 @@ export default function Dashboard({ username }: { username: string }) {
       )}
       {confirmApiKeyDelete && (
         <div className="fixed inset-0 z-[60] grid place-items-center bg-black/60 px-5 backdrop-blur-sm">
-          <div className="w-full max-w-sm rounded-2xl border border-red-400/30 bg-zinc-900 p-6 shadow-2xl">
+          <div className="danger-modal w-full max-w-sm rounded-2xl border border-red-400/30 bg-zinc-900 p-6 shadow-2xl">
             <p className="text-xs font-semibold uppercase tracking-widest text-red-300">
               Delete API key
             </p>
@@ -875,6 +948,7 @@ export default function Dashboard({ username }: { username: string }) {
                     method: "DELETE",
                   });
                   setConfirmApiKeyDelete(false);
+                  setApiKey(null);
                   if (!response.ok) {
                     setMessage("Could not delete API key.");
                     return;
