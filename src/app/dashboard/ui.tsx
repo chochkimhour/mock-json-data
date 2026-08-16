@@ -292,8 +292,8 @@ export default function Dashboard({ displayName }: { displayName: string }) {
             </button>
           </div>
         </header>
-        <div className="grid flex-1 gap-4 py-6 sm:gap-5 sm:py-7 lg:gap-6 lg:py-8 lg:grid-cols-[300px_minmax(0,1fr)] lg:items-stretch">
-          <section className="px-4 sm:px-6 lg:sticky lg:top-24 lg:self-start lg:min-h-full lg:border-r lg:border-zinc-700/60 lg:px-0 lg:pr-6">
+        <div className="grid flex-1 gap-4 pb-6 pt-3 sm:gap-5 sm:pb-7 sm:pt-4 lg:gap-6 lg:py-8 lg:grid-cols-[300px_minmax(0,1fr)] lg:items-stretch">
+          <section className="w-full min-w-0 rounded-2xl border border-zinc-800/90 p-4 sm:p-6 lg:sticky lg:top-24 lg:self-start lg:min-h-full lg:p-4">
             <p className="muted text-xs font-semibold uppercase tracking-[0.18em]">
               Workspace
             </p>
@@ -315,7 +315,7 @@ export default function Dashboard({ displayName }: { displayName: string }) {
                 </p>
               </div>
             </div>
-            <div className="mt-4 rounded-lg border border-amber-500/30 bg-amber-500/10 p-3">
+            <div className="mt-4 min-w-0 rounded-lg border border-amber-500/30 bg-amber-500/10 p-3">
               <p className="text-xs font-semibold uppercase tracking-wider text-amber-300">
                 Your API key
               </p>
@@ -331,10 +331,10 @@ export default function Dashboard({ displayName }: { displayName: string }) {
                     : "No API key"}
                 </code>
               </div>
-              <div className="mt-2 flex flex-nowrap gap-2">
+              <div className="mt-2 flex flex-wrap items-center gap-2">
                 <button
                   type="button"
-                  className="inline-flex items-center gap-1 border border-amber-500/40 px-2 py-1 text-xs"
+                  className="inline-flex shrink-0 items-center gap-1 border border-amber-500/40 px-2 py-1 text-xs"
                   onClick={async () => {
                     const response = await fetch("/api/auth/api-key", {
                       method: "POST",
@@ -434,7 +434,7 @@ export default function Dashboard({ displayName }: { displayName: string }) {
               {filteredProjects.map((p) => (
                 <div
                   className={
-                    "panel project-card flex items-center gap-3 p-3 hover:border-orange-500 " +
+                    "panel project-card flex w-full min-w-0 items-center gap-3 p-3 hover:border-orange-500 " +
                     (selected?.id === p.id
                       ? "border-orange-500 bg-orange-500/10"
                       : "")
@@ -474,7 +474,7 @@ export default function Dashboard({ displayName }: { displayName: string }) {
               ))}
             </div>
           </section>
-          <section className="panel relative min-h-0 min-w-0 p-4 sm:min-h-[620px] sm:p-6 lg:p-8">
+          <section className="panel relative w-full min-h-0 min-w-0 p-4 sm:min-h-[620px] sm:p-6 lg:p-8">
             {selected ? (
               <>
                 <p className="muted text-xs font-semibold uppercase tracking-wider">

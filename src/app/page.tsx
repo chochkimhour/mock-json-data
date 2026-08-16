@@ -26,7 +26,7 @@ export default function Home() {
           </Link>
         </div>
       </nav>
-      <section className="grid flex-1 items-center gap-10 py-16 sm:py-20 lg:grid-cols-[1.08fr_.92fr] lg:gap-16">
+      <section className="grid flex-1 items-center gap-8 py-8 sm:gap-10 sm:py-14 lg:grid-cols-[1.08fr_.92fr] lg:gap-16 lg:py-20">
         <div>
           <p className="mb-4 text-sm font-semibold text-indigo-400">
             Developer-first mock APIs
