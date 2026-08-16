@@ -51,6 +51,7 @@ export default function Dashboard({ displayName }: { displayName: string }) {
   const [projects, setProjects] = useState<Project[]>([]),
     [apiKey, setApiKey] = useState<string | null>(null),
     [name, setName] = useState(""),
+    [projectSearch, setProjectSearch] = useState(""),
     [selected, setSelected] = useState<Project | null>(null),
     [endpoints, setEndpoints] = useState<Endpoint[]>([]),
     [resource, setResource] = useState<string | null>(null),
@@ -224,6 +225,9 @@ export default function Dashboard({ displayName }: { displayName: string }) {
   const filteredEndpoints = method
     ? visibleEndpoints.filter((item) => item.method === method)
     : visibleEndpoints;
+  const filteredProjects = projects.filter((project) =>
+    project.name.toLowerCase().includes(projectSearch.trim().toLowerCase()),
+  );
   return (
     <>
       <main className="dashboard-frame relative mx-auto flex min-h-screen w-full max-w-5xl flex-col border-x border-zinc-700/60 px-4 pb-2 pt-24 sm:px-8 sm:pb-3 sm:pt-24">
@@ -401,6 +405,15 @@ export default function Dashboard({ displayName }: { displayName: string }) {
                 Create
               </button>
             </div>
+            {projects.length > 0 && (
+              <input
+                value={projectSearch}
+                onChange={(event) => setProjectSearch(event.target.value)}
+                placeholder="Search projects"
+                aria-label="Search projects"
+                className="mt-3 w-full"
+              />
+            )}
             <div className="thin-scrollbar project-list-scroll -my-2 mt-5 grid max-h-[620px] gap-3 overflow-y-auto px-1 py-2">
               {projects.length === 0 && (
                 <div className="panel p-5">
@@ -410,7 +423,15 @@ export default function Dashboard({ displayName }: { displayName: string }) {
                   </p>
                 </div>
               )}
-              {projects.map((p) => (
+              {projects.length > 0 && filteredProjects.length === 0 && (
+                <div className="panel p-5 text-center">
+                  <b>No projects found.</b>
+                  <p className="muted mt-1 text-sm">
+                    Try a different project name.
+                  </p>
+                </div>
+              )}
+              {filteredProjects.map((p) => (
                 <div
                   className={
                     "panel project-card flex items-center gap-3 p-3 hover:border-orange-500 " +
@@ -700,7 +721,7 @@ export default function Dashboard({ displayName }: { displayName: string }) {
                         2,
                       )}
                     />
-                    <div className="flex flex-wrap gap-2">
+                    <div className="flex flex-nowrap gap-1 sm:gap-2">
                       <input
                         ref={jsonFileRef}
                         type="file"
@@ -729,7 +750,7 @@ export default function Dashboard({ displayName }: { displayName: string }) {
                       />
                       <button
                         type="button"
-                        className="order-2 inline-flex max-w-full w-fit items-center gap-1 px-2 py-2 text-xs whitespace-nowrap sm:gap-1.5 sm:px-3 sm:text-sm"
+                        className="order-2 inline-flex min-w-0 flex-1 items-center justify-center gap-1 border border-zinc-700 px-1.5 py-2 text-[11px] whitespace-nowrap sm:gap-1.5 sm:px-3 sm:text-sm"
                         onClick={() => jsonFileRef.current?.click()}
                       >
                         <Upload size={15} aria-hidden="true" />
@@ -737,7 +758,7 @@ export default function Dashboard({ displayName }: { displayName: string }) {
                       </button>
                       <button
                         type="button"
-                        className="order-1 inline-flex max-w-full w-fit items-center gap-1 px-2 py-2 text-xs whitespace-nowrap sm:gap-1.5 sm:px-3 sm:text-sm"
+                        className="order-1 inline-flex min-w-0 flex-1 items-center justify-center gap-1 border border-zinc-700 px-1.5 py-2 text-[11px] whitespace-nowrap sm:gap-1.5 sm:px-3 sm:text-sm"
                         onClick={() => {
                           const example = {
                             status: 200,
@@ -764,7 +785,7 @@ export default function Dashboard({ displayName }: { displayName: string }) {
                       </button>
                       <button
                         type="button"
-                        className="order-3 inline-flex max-w-full w-fit items-center gap-1 px-2 py-2 text-xs whitespace-nowrap sm:gap-1.5 sm:px-3 sm:text-sm"
+                        className="order-3 inline-flex min-w-0 flex-1 items-center justify-center gap-1 border border-zinc-700 px-1.5 py-2 text-[11px] whitespace-nowrap sm:gap-1.5 sm:px-3 sm:text-sm"
                         onClick={() => {
                           if (!responseRef.current) return;
                           try {
