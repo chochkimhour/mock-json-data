@@ -124,7 +124,6 @@ body.light .endpoint-selected {
 }
 body.light .back-to-top {
   color: #4338ca;
-  background: rgba(255, 255, 255, 0.92);
 }
 body.light .back-to-top:hover {
   color: #312e81;

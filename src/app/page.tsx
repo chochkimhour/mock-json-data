@@ -2,9 +2,11 @@ import Link from "next/link";
 import { Clock3, Plus } from "lucide-react";
 import ThemeToggle from "./theme-toggle";
 import Typewriter from "./typewriter";
+import BackToTop from "./back-to-top";
 export default function Home() {
   return (
     <main className="dashboard-frame relative mx-auto flex min-h-screen w-full max-w-5xl flex-col border-x border-zinc-800/80 px-5 pb-2 pt-24 sm:px-8 sm:pb-3 sm:pt-24">
+      <BackToTop />
       <nav className="fixed left-1/2 top-3 z-50 flex w-[calc(100%-1.5rem)] max-w-[60rem] -translate-x-1/2 items-center justify-between rounded-2xl border border-indigo-300/40 bg-zinc-900/45 px-4 py-3 shadow-xl shadow-black/20 backdrop-blur-lg sm:top-4 sm:w-[calc(100%-4rem)]">
         <div className="flex min-w-0 items-center gap-2">
           <img
