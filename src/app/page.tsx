@@ -10,7 +10,7 @@ export default function Home() {
           <img
             src="/mock-json-logo.svg"
             alt="Mock JSON Data"
-            className="size-8 shrink-0 rounded-lg object-contain"
+            className="logo-mark size-8 shrink-0 rounded-lg object-contain"
           />
           <span className="cursor-pointer truncate text-base tracking-tight transition-colors hover:text-indigo-300 sm:text-xl">
             <b>Mock JSON Data</b>

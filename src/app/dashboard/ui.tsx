@@ -281,7 +281,7 @@ export default function Dashboard({ displayName }: { displayName: string }) {
           }
         >
           <div className="flex min-w-0 items-center gap-2">
-            <span className="grid size-8 place-items-center overflow-hidden rounded-lg bg-white">
+            <span className="logo-mark grid size-8 place-items-center overflow-hidden rounded-lg bg-white">
               <img
                 src="/mock-json-logo.svg"
                 alt="Mock JSON Data"
@@ -341,12 +341,12 @@ export default function Dashboard({ displayName }: { displayName: string }) {
               </p>
               <span
                 className={
-                  "inline-flex items-center gap-1.5 text-[11px] font-semibold " +
+                  "inline-flex items-center gap-1.5 rounded border px-2 py-1 text-[11px] font-semibold " +
                   (health === "healthy"
-                    ? "text-emerald-400"
+                    ? "border-emerald-400/40 text-emerald-400"
                     : health === "slow"
-                      ? "text-amber-700 dark:text-amber-400"
-                      : "text-red-400")
+                      ? "border-amber-500/50 text-amber-700 dark:border-amber-400/50 dark:text-amber-400"
+                      : "border-red-400/50 text-red-400")
                 }
                 title={
                   health === "healthy"
@@ -457,10 +457,11 @@ export default function Dashboard({ displayName }: { displayName: string }) {
                   type="button"
                   title="Copy API key"
                   aria-label="Copy API key"
-                  disabled={!apiKey}
+                  disabled={!apiKey || apiKey.includes("*")}
                   className="inline-flex size-7 items-center justify-center border border-amber-500/40"
                   onClick={() =>
                     apiKey &&
+                    !apiKey.includes("*") &&
                     navigator.clipboard
                       .writeText(apiKey)
                       .then(() => setMessage("API key copied."))
@@ -976,7 +977,7 @@ export default function Dashboard({ displayName }: { displayName: string }) {
           onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
           title="Scroll to top"
           aria-label="Scroll to top"
-          className="fixed bottom-4 right-4 z-50 rounded-lg border border-indigo-300/30 bg-zinc-900/90 p-2 font-mono text-[11px] uppercase tracking-widest text-zinc-300 shadow-lg backdrop-blur-xl transition duration-200 hover:-translate-y-1 hover:text-indigo-300 sm:bottom-6 sm:right-6 sm:rounded-none sm:border-0 sm:bg-transparent sm:p-0 sm:shadow-none"
+          className="back-to-top fixed bottom-4 right-4 z-50 rounded-lg bg-zinc-900/90 p-2 font-mono text-[11px] uppercase tracking-widest text-zinc-300 shadow-lg backdrop-blur-xl transition duration-200 hover:-translate-y-1 hover:text-indigo-300 sm:bottom-6 sm:right-6 sm:rounded-none sm:bg-transparent sm:p-0 sm:shadow-none"
         >
           ↑<span className="ml-1">Top</span>
         </button>

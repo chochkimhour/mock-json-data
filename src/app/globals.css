@@ -122,6 +122,23 @@ body.light .endpoint-row {
 body.light .endpoint-selected {
   @apply border-l-emerald-500 bg-emerald-50;
 }
+body.light .back-to-top {
+  color: #4338ca;
+  background: rgba(255, 255, 255, 0.92);
+}
+body.light .back-to-top:hover {
+  color: #312e81;
+}
+.logo-mark {
+  box-shadow:
+    0 0 0 1px rgba(249, 115, 22, 0.45),
+    0 3px 10px rgba(0, 0, 0, 0.2);
+}
+body.light .logo-mark {
+  box-shadow:
+    0 0 0 1px rgba(234, 88, 12, 0.55),
+    0 3px 10px rgba(24, 24, 27, 0.16);
+}
 body.light .retention-label {
   color: #3f3f46;
 }
