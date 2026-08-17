@@ -2,6 +2,24 @@ import { NextResponse } from "next/server";
 import { currentUser } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { createApiKey } from "@/lib/api-key";
+import { decryptApiKey, encryptApiKey } from "@/lib/api-key-crypto";
+
+export async function GET() {
+  const user = await currentUser();
+  if (!user)
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  const stored = await db.user.findUnique({
+    where: { id: user.id },
+    select: { apiKeyEncrypted: true, apiKeyCreatedAt: true, apiKeyLast4: true },
+  });
+  return NextResponse.json({
+    apiKey: stored?.apiKeyEncrypted
+      ? decryptApiKey(stored.apiKeyEncrypted)
+      : null,
+    last4: stored?.apiKeyLast4 ?? null,
+    createdAt: stored?.apiKeyCreatedAt ?? null,
+  });
+}
 
 export async function POST() {
   const user = await currentUser();
@@ -16,6 +34,7 @@ export async function POST() {
         where: { id: user.id },
         data: {
           apiKeyHash: apiKey.hash,
+          apiKeyEncrypted: encryptApiKey(apiKey.value),
           apiKeyLast4: apiKey.last4,
           apiKeyCreatedAt: createdAt,
           apiKeyRevokedAt: null,
@@ -38,7 +57,12 @@ export async function DELETE() {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   await db.user.update({
     where: { id: user.id },
-    data: { apiKeyHash: null, apiKeyLast4: null, apiKeyRevokedAt: new Date() },
+    data: {
+      apiKeyHash: null,
+      apiKeyEncrypted: null,
+      apiKeyLast4: null,
+      apiKeyRevokedAt: new Date(),
+    },
   });
   return NextResponse.json({ ok: true });
 }

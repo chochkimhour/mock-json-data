@@ -82,15 +82,14 @@ export default function Dashboard({ displayName }: { displayName: string }) {
       if (!response.ok) throw new Error("Could not load projects");
       const data = await response.json();
       setProjects(data);
-      const storedKey = data[0]?.owner;
-      if (storedKey?.apiKeyLast4) {
-        const savedKey = window.localStorage.getItem("mock-json-data-api-key");
-        setApiKey(savedKey || `mjd_${"*".repeat(20)}${storedKey.apiKeyLast4}`);
+      const keyResponse = await fetch("/api/auth/api-key");
+      const keyData = keyResponse.ok ? await keyResponse.json() : null;
+      if (keyData?.apiKey) {
+        setApiKey(keyData.apiKey);
         setApiKeyExpiresAt(
-          storedKey.apiKeyCreatedAt
+          keyData.createdAt
             ? new Date(
-                new Date(storedKey.apiKeyCreatedAt).getTime() +
-                  7 * 24 * 60 * 60 * 1000,
+                new Date(keyData.createdAt).getTime() + 7 * 24 * 60 * 60 * 1000,
               ).toISOString()
             : null,
         );
@@ -430,10 +429,6 @@ export default function Dashboard({ displayName }: { displayName: string }) {
                     const generated = await response.json();
                     setApiKey(generated.apiKey);
                     setApiKeyExpiresAt(generated.expiresAt);
-                    window.localStorage.setItem(
-                      "mock-json-data-api-key",
-                      generated.apiKey,
-                    );
                     await load();
                     setApiKey(generated.apiKey);
                     setApiKeyExpiresAt(generated.expiresAt);
@@ -1085,7 +1080,6 @@ export default function Dashboard({ displayName }: { displayName: string }) {
                   setConfirmApiKeyDelete(false);
                   setApiKey(null);
                   setApiKeyExpiresAt(null);
-                  window.localStorage.removeItem("mock-json-data-api-key");
                   if (!response.ok) {
                     setMessage("Could not delete API key.");
                     return;

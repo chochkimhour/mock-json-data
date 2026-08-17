@@ -38,6 +38,7 @@ model User {
   username        String    @unique
   passwordHash    String
   apiKeyHash      String?   @unique
+  apiKeyEncrypted String?
   apiKeyLast4     String?
   apiKeyCreatedAt DateTime?
   apiKeyRevokedAt DateTime?
