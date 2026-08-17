@@ -7,13 +7,16 @@ import {
   Download,
   Eye,
   EyeOff,
+  FolderKanban,
   Info,
   KeyRound,
+  LogOut,
   Moon,
   Plus,
   Pencil,
   Power,
   RefreshCw,
+  Save,
   Sun,
   Trash2,
   Upload,
@@ -377,7 +380,7 @@ export default function Dashboard({ displayName }: { displayName: string }) {
           </div>
           <span
             title="Mock JSON Data"
-            className="group absolute left-1/2 hidden -translate-x-1/2 cursor-pointer text-sm tracking-tight transition-colors hover:text-indigo-300 sm:block sm:text-xl"
+            className="group absolute left-1/2 hidden -translate-x-1/2 cursor-pointer text-sm tracking-tight transition-colors hover:text-indigo-300 sm:block sm:text-lg"
           >
             <span>
               <b>Mock JSON Data</b>
@@ -407,8 +410,9 @@ export default function Dashboard({ displayName }: { displayName: string }) {
                   () => (location.href = "/"),
                 )
               }
-              className="border border-zinc-700 px-2.5 py-2 text-xs hover:border-red-400 hover:bg-red-500/10 hover:text-red-300 sm:px-3 sm:text-sm"
+              className="inline-flex items-center gap-1.5 border border-zinc-700 px-2.5 py-2 text-xs hover:border-red-400 hover:bg-red-500/10 hover:text-red-300 sm:px-3 sm:text-sm"
             >
+              <LogOut size={14} aria-hidden="true" />
               Log out
             </button>
           </div>
@@ -465,7 +469,12 @@ export default function Dashboard({ displayName }: { displayName: string }) {
               </span>
             </div>
             <div className="border-b-2 border-zinc-700 pb-4">
-              <h1 className="mt-1 text-2xl font-bold tracking-tight">
+              <h1 className="mt-1 flex items-center gap-2 text-2xl font-bold tracking-tight">
+                <FolderKanban
+                  size={20}
+                  className="text-indigo-300"
+                  aria-hidden="true"
+                />
                 Your APIs
               </h1>
               <p className="muted mt-2 text-xs">
@@ -483,7 +492,8 @@ export default function Dashboard({ displayName }: { displayName: string }) {
               </div>
             </div>
             <div className="mt-4 min-w-0 rounded-lg border border-amber-500/30 bg-amber-500/10 p-3">
-              <p className="text-xs font-semibold uppercase tracking-wider text-amber-300">
+              <p className="flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wider text-amber-300">
+                <KeyRound size={13} aria-hidden="true" />
                 Your API key
               </p>
               <p className="muted mt-1 text-xs">
@@ -628,7 +638,14 @@ export default function Dashboard({ displayName }: { displayName: string }) {
                     }}
                     className="min-w-0 flex-1 text-left focus:outline-none focus:ring-0"
                   >
-                    <b>{p.name}</b>
+                    <div className="flex min-w-0 items-center gap-2">
+                      <FolderKanban
+                        size={15}
+                        className="shrink-0 text-indigo-300"
+                        aria-hidden="true"
+                      />
+                      <b className="truncate">{p.name}</b>
+                    </div>
                     <p className="muted mt-1 text-sm">
                       {p._count.endpoints} endpoint
                       {p._count.endpoints === 1 ? "" : "s"}
@@ -757,7 +774,14 @@ export default function Dashboard({ displayName }: { displayName: string }) {
                   <div>
                     <div className="flex flex-wrap items-center justify-between gap-3">
                       <div>
-                        <h3 className="font-semibold">Resources & endpoints</h3>
+                        <h3 className="flex items-center gap-1.5 font-semibold">
+                          <Braces
+                            size={15}
+                            className="text-indigo-300"
+                            aria-hidden="true"
+                          />
+                          Resources & endpoints
+                        </h3>
                         <p className="muted mt-1 text-sm">
                           Endpoints are grouped by their first URL segment.
                         </p>
@@ -890,8 +914,9 @@ export default function Dashboard({ displayName }: { displayName: string }) {
                             <button
                               type="button"
                               onClick={() => toggleEndpoint(selectedEndpoint)}
-                              className="rounded border border-zinc-700 px-2.5 py-1.5 text-xs"
+                              className="inline-flex items-center gap-1.5 rounded border border-zinc-700 px-2.5 py-1.5 text-xs"
                             >
+                              <Power size={13} aria-hidden="true" />
                               {selectedEndpoint.enabled ? "Disable" : "Enable"}
                             </button>
                             <button
@@ -943,7 +968,10 @@ export default function Dashboard({ displayName }: { displayName: string }) {
                             setSelectedEndpoint(null);
                           }}
                         >
-                          New endpoint
+                          <span className="inline-flex items-center gap-1.5">
+                            <Plus size={14} aria-hidden="true" />
+                            New endpoint
+                          </span>
                         </button>
                       )}
                     </div>
@@ -1067,8 +1095,16 @@ export default function Dashboard({ displayName }: { displayName: string }) {
                         Format
                       </button>
                     </div>
-                    <button className="btn">
-                      {selectedEndpoint ? "Update endpoint" : "Add endpoint"}
+                    <button className="btn inline-flex items-center justify-center gap-1.5">
+                      {selectedEndpoint ? (
+                        <>
+                          <Save size={15} aria-hidden="true" /> Update endpoint
+                        </>
+                      ) : (
+                        <>
+                          <Plus size={15} aria-hidden="true" /> Add endpoint
+                        </>
+                      )}
                     </button>
                   </form>
                 </div>

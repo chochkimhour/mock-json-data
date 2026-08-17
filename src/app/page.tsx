@@ -1,5 +1,13 @@
 import Link from "next/link";
-import { Clock3, Plus } from "lucide-react";
+import {
+  BookOpen,
+  Clock3,
+  Layers3,
+  ListTree,
+  LogIn,
+  Plus,
+  ShieldCheck,
+} from "lucide-react";
 import ThemeToggle from "./theme-toggle";
 import Typewriter from "./typewriter";
 import BackToTop from "./back-to-top";
@@ -14,16 +22,17 @@ export default function Home() {
             alt="Mock JSON Data"
             className="logo-mark size-8 shrink-0 rounded-lg object-contain"
           />
-          <span className="cursor-pointer truncate text-base tracking-tight transition-colors hover:text-indigo-300 sm:text-xl">
+          <span className="cursor-pointer truncate text-sm tracking-tight transition-colors hover:text-indigo-300 sm:text-lg">
             <b>Mock JSON Data</b>
           </span>
         </div>
         <div className="flex items-center gap-2">
           <ThemeToggle />
           <Link
-            className="btn shrink-0 px-3 text-xs sm:px-4 sm:text-sm"
+            className="btn inline-flex shrink-0 items-center gap-1.5 px-3 text-xs sm:px-4 sm:text-sm"
             href="/login"
           >
+            <LogIn size={14} aria-hidden="true" />
             Login
           </Link>
         </div>
@@ -67,7 +76,10 @@ export default function Home() {
               target="_blank"
               rel="noopener noreferrer"
             >
-              Explore documentation
+              <span className="inline-flex items-center gap-1.5">
+                <BookOpen size={15} aria-hidden="true" />
+                Explore documentation
+              </span>
             </Link>
           </div>
         </div>
@@ -82,7 +94,12 @@ export default function Home() {
         <p className="text-xs font-semibold uppercase tracking-[0.18em] text-orange-300">
           Fast · secure · easy to use
         </p>
-        <h2 className="mt-2 text-xl font-bold tracking-tight">
+        <h2 className="mt-2 flex items-center gap-2 text-xl font-bold tracking-tight">
+          <ShieldCheck
+            size={19}
+            className="text-emerald-300"
+            aria-hidden="true"
+          />
           Call your mock API in seconds.
         </h2>
         <p className="muted mt-2 max-w-2xl text-sm leading-6">
@@ -104,7 +121,22 @@ export default function Home() {
           ],
         ].map(([title, text]) => (
           <article className="panel p-5" key={title}>
-            <h2 className="font-semibold">{title}</h2>
+            <h2 className="flex items-center gap-2 font-semibold">
+              {title === "Real endpoints" ? (
+                <ListTree
+                  size={16}
+                  className="text-indigo-300"
+                  aria-hidden="true"
+                />
+              ) : (
+                <Layers3
+                  size={16}
+                  className="text-indigo-300"
+                  aria-hidden="true"
+                />
+              )}
+              {title}
+            </h2>
             <p className="muted mt-2 text-sm">{text}</p>
           </article>
         ))}
