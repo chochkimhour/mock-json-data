@@ -252,12 +252,14 @@ export default function Dashboard({ displayName }: { displayName: string }) {
     const updated = await response.json();
     setProjects((items) =>
       items.map((item) =>
-        item.id === updated.id ? { ...item, name: updated.name } : item,
+        item.id === updated.id
+          ? { ...item, name: updated.name, slug: updated.slug }
+          : item,
       ),
     );
     setSelected((item) => {
       if (!item || item.id !== updated.id) return item;
-      return { ...item, name: updated.name };
+      return { ...item, name: updated.name, slug: updated.slug };
     });
     setEditingProjectName(false);
     setMessage("Project renamed.");
