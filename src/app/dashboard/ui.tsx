@@ -42,11 +42,11 @@ type Endpoint = {
   responseBody: unknown;
 };
 const methodStyle: Record<string, string> = {
-  GET: "bg-emerald-500/15 text-emerald-300",
-  POST: "bg-sky-500/15 text-sky-300",
-  PUT: "bg-amber-500/15 text-amber-300",
-  PATCH: "bg-violet-500/15 text-violet-300",
-  DELETE: "bg-red-500/15 text-red-300",
+  GET: "method-get bg-emerald-500/15 text-emerald-300",
+  POST: "method-post bg-sky-500/15 text-sky-300",
+  PUT: "method-put bg-amber-500/15 text-amber-300",
+  PATCH: "method-patch bg-violet-500/15 text-violet-300",
+  DELETE: "method-delete bg-red-500/15 text-red-300",
 };
 function resourceName(path: string) {
   return path.split("/").filter(Boolean)[0]?.replace(/[-_]/g, " ") ?? "root";
@@ -82,6 +82,22 @@ export default function Dashboard({ displayName }: { displayName: string }) {
       if (!response.ok) throw new Error("Could not load projects");
       const data = await response.json();
       setProjects(data);
+      const storedKey = data[0]?.owner;
+      if (storedKey?.apiKeyLast4) {
+        const savedKey = window.localStorage.getItem("mock-json-data-api-key");
+        setApiKey(savedKey || `mjd_${"*".repeat(20)}${storedKey.apiKeyLast4}`);
+        setApiKeyExpiresAt(
+          storedKey.apiKeyCreatedAt
+            ? new Date(
+                new Date(storedKey.apiKeyCreatedAt).getTime() +
+                  7 * 24 * 60 * 60 * 1000,
+              ).toISOString()
+            : null,
+        );
+      } else {
+        setApiKey(null);
+        setApiKeyExpiresAt(null);
+      }
       setHealth(performance.now() - started > 1500 ? "slow" : "healthy");
     } catch {
       setHealth("error");
@@ -329,7 +345,7 @@ export default function Dashboard({ displayName }: { displayName: string }) {
                   (health === "healthy"
                     ? "text-emerald-400"
                     : health === "slow"
-                      ? "text-amber-400"
+                      ? "text-amber-700 dark:text-amber-400"
                       : "text-red-400")
                 }
                 title={
@@ -346,7 +362,7 @@ export default function Dashboard({ displayName }: { displayName: string }) {
                     (health === "healthy"
                       ? "bg-emerald-400"
                       : health === "slow"
-                        ? "bg-amber-400"
+                        ? "bg-amber-600 dark:bg-amber-400"
                         : "bg-red-400")
                   }
                 />
@@ -383,16 +399,18 @@ export default function Dashboard({ displayName }: { displayName: string }) {
                 Use this key for all your mock APIs.
               </p>
               {apiKeyExpiresAt && (
-                <p className="mt-1 text-[11px] text-amber-300/80">
+                <p className="mt-1 text-[11px] text-amber-800 dark:text-amber-200">
                   Expires {new Date(apiKeyExpiresAt).toLocaleDateString()}
                 </p>
               )}
               <div className="mt-2 min-w-0 max-w-full overflow-hidden">
                 <code className="block min-w-0 max-w-full overflow-hidden text-ellipsis whitespace-nowrap text-xs text-amber-100">
                   {apiKey
-                    ? showApiKey
+                    ? showApiKey && apiKey.includes("••••")
                       ? apiKey
-                      : "*".repeat(apiKey.length)
+                      : showApiKey
+                        ? apiKey
+                        : "*".repeat(apiKey.length)
                     : "No API key"}
                 </code>
               </div>
@@ -412,7 +430,13 @@ export default function Dashboard({ displayName }: { displayName: string }) {
                     const generated = await response.json();
                     setApiKey(generated.apiKey);
                     setApiKeyExpiresAt(generated.expiresAt);
+                    window.localStorage.setItem(
+                      "mock-json-data-api-key",
+                      generated.apiKey,
+                    );
                     await load();
+                    setApiKey(generated.apiKey);
+                    setApiKeyExpiresAt(generated.expiresAt);
                     setMessage("API key generated.");
                   }}
                 >
@@ -652,7 +676,7 @@ export default function Dashboard({ displayName }: { displayName: string }) {
                           className={
                             "rounded border px-3 py-1.5 text-xs font-bold " +
                             (method === item
-                              ? "border-emerald-400 bg-emerald-500/20 text-emerald-200"
+                              ? "border-emerald-500 bg-emerald-100 text-emerald-800 dark:border-emerald-400 dark:bg-emerald-500/20 dark:text-emerald-200"
                               : methodStyle[item])
                           }
                         >
@@ -672,9 +696,9 @@ export default function Dashboard({ displayName }: { displayName: string }) {
                               )
                             }
                             className={
-                              "flex w-full items-center gap-3 px-4 py-3 text-left focus:outline-none focus:ring-0 hover:bg-zinc-800/50 " +
+                              "endpoint-row flex w-full items-center gap-3 border-b border-zinc-800 px-4 py-3 text-left transition-colors last:border-b-0 focus:outline-none focus:ring-0 hover:bg-zinc-800 " +
                               (selectedEndpoint?.id === item.id
-                                ? "border-l-2 border-l-emerald-400 bg-emerald-500/10"
+                                ? "endpoint-selected border-l-2 border-l-emerald-400 bg-emerald-950/80"
                                 : "")
                             }
                           >
@@ -994,7 +1018,7 @@ export default function Dashboard({ displayName }: { displayName: string }) {
                 }}
                 className="border border-red-500/60 bg-red-500/15 px-3 py-2 text-sm text-red-300 hover:bg-red-500/30"
               >
-                Delete permanently
+                Delete
               </button>
             </div>
           </div>
@@ -1026,7 +1050,7 @@ export default function Dashboard({ displayName }: { displayName: string }) {
                 onClick={deleteEndpoint}
                 className="border border-red-500/60 bg-red-500/15 px-3 py-2 text-sm text-red-300 hover:bg-red-500/30"
               >
-                Delete permanently
+                Delete
               </button>
             </div>
           </div>
@@ -1060,6 +1084,7 @@ export default function Dashboard({ displayName }: { displayName: string }) {
                   setConfirmApiKeyDelete(false);
                   setApiKey(null);
                   setApiKeyExpiresAt(null);
+                  window.localStorage.removeItem("mock-json-data-api-key");
                   if (!response.ok) {
                     setMessage("Could not delete API key.");
                     return;
@@ -1069,7 +1094,7 @@ export default function Dashboard({ displayName }: { displayName: string }) {
                 }}
                 className="border border-red-500/60 bg-red-500/15 px-3 py-2 text-sm text-red-300 hover:bg-red-500/30"
               >
-                Delete permanently
+                Delete
               </button>
             </div>
           </div>
