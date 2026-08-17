@@ -3,11 +3,7 @@ import ThemeToggle from "../theme-toggle";
 import BackToTop from "../back-to-top";
 
 const steps = [
-  [
-    "01",
-    "Create an API",
-    "Open the dashboard, name your API, and choose its visibility.",
-  ],
+  ["01", "Create an API", "Open the dashboard and give your API a clear name."],
   [
     "02",
     "Add a GET resource",
@@ -22,30 +18,33 @@ const steps = [
 
 export default function Docs() {
   return (
-    <main className="dashboard-frame relative mx-auto flex min-h-screen w-full max-w-5xl flex-col border-x border-zinc-800/80 px-5 pb-2 pt-24 sm:px-8 sm:pb-3 sm:pt-24">
+    <main className="dashboard-frame relative mx-auto flex min-h-screen w-full max-w-5xl flex-col border-x border-zinc-800/80 px-4 pb-2 pt-20 sm:px-8 sm:pb-3 sm:pt-24">
       <BackToTop />
-      <header className="fixed left-1/2 top-3 z-50 flex w-[calc(100%-1.5rem)] max-w-[60rem] -translate-x-1/2 items-center justify-between rounded-2xl border border-zinc-800/90 bg-zinc-950/75 px-4 py-3 backdrop-blur sm:top-4 sm:w-[calc(100%-4rem)]">
-        <Link href="/" className="font-semibold tracking-tight">
+      <header className="fixed left-1/2 top-2 z-50 flex w-[calc(100%-1rem)] max-w-[60rem] -translate-x-1/2 items-center justify-between gap-2 rounded-2xl border border-zinc-800/90 bg-zinc-950/75 px-3 py-2.5 backdrop-blur sm:top-4 sm:w-[calc(100%-4rem)] sm:px-4 sm:py-3">
+        <Link
+          href="/"
+          className="min-w-0 truncate text-sm font-semibold tracking-tight sm:text-base"
+        >
           Mock JSON Data
         </Link>
         <div className="flex items-center gap-2">
           <ThemeToggle />
           <Link
             href="/"
-            className="back-home rounded-md border border-zinc-700 px-3 py-2 text-xs transition"
+            className="back-home rounded-md border border-zinc-700 px-2.5 py-1.5 text-[11px] transition sm:px-3 sm:py-2 sm:text-xs"
           >
             ← Back home
           </Link>
         </div>
       </header>
-      <div className="mx-auto w-full max-w-3xl flex-1 py-14 sm:py-20">
+      <div className="mx-auto w-full max-w-3xl flex-1 py-8 sm:py-16">
         <p className="text-xs font-semibold uppercase tracking-[0.18em] text-indigo-400">
           Documentation
         </p>
-        <h1 className="mt-3 text-4xl font-bold tracking-tight sm:text-5xl">
+        <h1 className="mt-3 max-w-2xl text-3xl font-bold leading-tight tracking-tight sm:text-5xl">
           Build your first mock API.
         </h1>
-        <p className="muted mt-5 max-w-2xl leading-7">
+        <p className="muted mt-4 max-w-2xl text-sm leading-6 sm:mt-5 sm:text-base sm:leading-7">
           Create realistic GET endpoints for frontend development, testing,
           demos, and integrations—without waiting for a backend.
         </p>

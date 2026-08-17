@@ -11,12 +11,16 @@ import {
   KeyRound,
   Moon,
   Plus,
+  Pencil,
+  Power,
+  RefreshCw,
   Sun,
   Trash2,
   Upload,
   Braces,
   X,
 } from "lucide-react";
+import { API_KEY_TTL_MS } from "@/lib/api-key";
 type Project = {
   id: string;
   publicId: string;
@@ -28,7 +32,7 @@ type Project = {
   slug: string | null;
   name: string;
   description: string | null;
-  visibility: string;
+  enabled: boolean;
   updatedAt: string;
   expiresAt: string | null;
   _count: { endpoints: number; logs: number };
@@ -40,6 +44,7 @@ type Endpoint = {
   path: string;
   statusCode: number;
   responseBody: unknown;
+  enabled: boolean;
 };
 const methodStyle: Record<string, string> = {
   GET: "method-get bg-emerald-500/15 text-emerald-300",
@@ -59,6 +64,8 @@ export default function Dashboard({ displayName }: { displayName: string }) {
     [name, setName] = useState(""),
     [projectSearch, setProjectSearch] = useState(""),
     [selected, setSelected] = useState<Project | null>(null),
+    [editingProjectName, setEditingProjectName] = useState(false),
+    [projectNameDraft, setProjectNameDraft] = useState(""),
     [endpoints, setEndpoints] = useState<Endpoint[]>([]),
     [resource, setResource] = useState<string | null>(null),
     [method, setMethod] = useState<string | null>(null),
@@ -89,7 +96,7 @@ export default function Dashboard({ displayName }: { displayName: string }) {
         setApiKeyExpiresAt(
           keyData.createdAt
             ? new Date(
-                new Date(keyData.createdAt).getTime() + 7 * 24 * 60 * 60 * 1000,
+                new Date(keyData.createdAt).getTime() + API_KEY_TTL_MS,
               ).toISOString()
             : null,
         );
@@ -230,6 +237,78 @@ export default function Dashboard({ displayName }: { displayName: string }) {
       void load();
     } else setMessage("Could not delete this project.");
   }
+  async function renameProject(event: React.FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    if (!selected || !projectNameDraft.trim()) return;
+    const response = await fetch(`/api/projects/${selected.id}`, {
+      method: "PATCH",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ name: projectNameDraft }),
+    });
+    if (!response.ok) {
+      setMessage((await response.json()).error ?? "Could not rename project.");
+      return;
+    }
+    const updated = await response.json();
+    setProjects((items) =>
+      items.map((item) =>
+        item.id === updated.id ? { ...item, name: updated.name } : item,
+      ),
+    );
+    setSelected((item) => {
+      if (!item || item.id !== updated.id) return item;
+      return { ...item, name: updated.name };
+    });
+    setEditingProjectName(false);
+    setMessage("Project renamed.");
+  }
+  async function toggleProject() {
+    if (!selected) return;
+    const enabled = !selected.enabled;
+    const response = await fetch(`/api/projects/${selected.id}`, {
+      method: "PATCH",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ enabled }),
+    });
+    if (!response.ok) {
+      setMessage("Could not update API status.");
+      return;
+    }
+    setProjects((items) =>
+      items.map((item) =>
+        item.id === selected.id ? { ...item, enabled } : item,
+      ),
+    );
+    setSelected((item) =>
+      item && item.id === selected.id ? { ...item, enabled } : item,
+    );
+    setMessage(enabled ? "API enabled." : "API disabled.");
+  }
+  async function toggleEndpoint(endpointItem: Endpoint) {
+    if (!selected) return;
+    const enabled = !endpointItem.enabled;
+    const response = await fetch(
+      `/api/projects/${selected.id}/endpoints/${endpointItem.id}`,
+      {
+        method: "PATCH",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ enabled }),
+      },
+    );
+    if (!response.ok) {
+      setMessage("Could not update endpoint status.");
+      return;
+    }
+    setEndpoints((items) =>
+      items.map((item) =>
+        item.id === endpointItem.id ? { ...item, enabled } : item,
+      ),
+    );
+    setSelectedEndpoint((item) =>
+      item?.id === endpointItem.id ? { ...item, enabled } : item,
+    );
+    setMessage(enabled ? "Endpoint enabled." : "Endpoint disabled.");
+  }
   async function deleteEndpoint() {
     if (!selected || !endpointDeleteTarget) return;
     const response = await fetch(
@@ -270,13 +349,13 @@ export default function Dashboard({ displayName }: { displayName: string }) {
   );
   return (
     <>
-      <main className="dashboard-frame relative mx-auto flex min-h-screen w-full max-w-5xl flex-col border-x border-zinc-700/60 px-4 pb-2 pt-24 sm:px-8 sm:pb-3 sm:pt-24">
+      <main className="dashboard-frame relative mx-auto flex min-h-screen w-full max-w-5xl flex-col border-x border-zinc-700/60 px-3 pb-2 pt-20 sm:px-8 sm:pb-3 sm:pt-24">
         <header
           className={
-            "fixed left-1/2 top-3 z-50 flex w-[calc(100%-1.5rem)] max-w-[60rem] -translate-x-1/2 items-center justify-between gap-2 rounded-2xl border border-indigo-300/40 bg-zinc-900/45 px-3 shadow-xl shadow-black/20 transition-all duration-300 sm:top-4 sm:w-[calc(100%-4rem)] sm:px-5 " +
+            "fixed left-1/2 top-2 z-50 flex w-[calc(100%-1rem)] max-w-[60rem] -translate-x-1/2 items-center justify-between gap-2 rounded-2xl border border-indigo-300/40 bg-zinc-900/45 px-2.5 shadow-xl shadow-black/20 transition-all duration-300 sm:top-4 sm:w-[calc(100%-4rem)] sm:px-5 " +
             (scrolled
               ? "bg-zinc-900/35 py-2 backdrop-blur-2xl shadow-2xl"
-              : "py-2.5 backdrop-blur-lg sm:py-3")
+              : "py-2 backdrop-blur-lg sm:py-3")
           }
         >
           <div className="flex min-w-0 items-center gap-2">
@@ -289,7 +368,7 @@ export default function Dashboard({ displayName }: { displayName: string }) {
             </span>
             <span
               title={displayName}
-              className="max-w-[7rem] truncate text-sm font-semibold text-zinc-200 sm:max-w-[14rem]"
+              className="max-w-[6.5rem] truncate text-xs font-semibold text-zinc-200 sm:max-w-[14rem] sm:text-sm"
             >
               {displayName}
             </span>
@@ -335,9 +414,20 @@ export default function Dashboard({ displayName }: { displayName: string }) {
         <div className="grid flex-1 gap-4 pb-6 pt-3 sm:gap-5 sm:pb-7 sm:pt-4 lg:gap-6 lg:py-8 lg:grid-cols-[300px_minmax(0,1fr)] lg:items-stretch">
           <section className="w-full min-w-0 rounded-2xl border border-zinc-800/90 p-4 sm:p-6 lg:sticky lg:top-24 lg:self-start lg:min-h-full lg:p-4">
             <div className="flex items-center justify-between gap-3">
-              <p className="muted text-xs font-semibold uppercase tracking-[0.18em]">
-                Workspace
-              </p>
+              <div className="flex items-center gap-2">
+                <p className="muted text-xs font-semibold uppercase tracking-[0.18em]">
+                  Workspace
+                </p>
+                <button
+                  type="button"
+                  title="Refresh page"
+                  aria-label="Refresh page"
+                  className="rounded border border-zinc-700 p-1.5 text-zinc-400 transition hover:border-indigo-400 hover:text-indigo-300"
+                  onClick={() => window.location.reload()}
+                >
+                  <RefreshCw size={13} aria-hidden="true" />
+                </button>
+              </div>
               <span
                 className={
                   "inline-flex items-center gap-1.5 rounded border px-2 py-1 text-[11px] font-semibold " +
@@ -538,8 +628,8 @@ export default function Dashboard({ displayName }: { displayName: string }) {
                   >
                     <b>{p.name}</b>
                     <p className="muted mt-1 text-sm">
-                      {p._count.endpoints} endpoints ·{" "}
-                      {p.visibility.toLowerCase()}
+                      {p._count.endpoints} endpoint
+                      {p._count.endpoints === 1 ? "" : "s"}
                     </p>
                     <p className="muted mt-1 text-[11px]">
                       Updated {new Date(p.updatedAt).toLocaleDateString()}
@@ -566,9 +656,61 @@ export default function Dashboard({ displayName }: { displayName: string }) {
                 <p className="muted text-xs font-semibold uppercase tracking-wider">
                   Mock API
                 </p>
-                <h2 className="mt-1 break-words text-2xl font-bold">
-                  {selected.name}
-                </h2>
+                {editingProjectName ? (
+                  <form
+                    onSubmit={renameProject}
+                    className="mt-2 flex max-w-xl gap-2"
+                  >
+                    <input
+                      autoFocus
+                      value={projectNameDraft}
+                      onChange={(event) =>
+                        setProjectNameDraft(event.target.value)
+                      }
+                      maxLength={80}
+                      className="min-w-0 flex-1"
+                    />
+                    <button className="btn px-3 text-xs">Save</button>
+                    <button
+                      type="button"
+                      className="border border-zinc-700 px-3 py-2 text-xs"
+                      onClick={() => setEditingProjectName(false)}
+                    >
+                      Cancel
+                    </button>
+                  </form>
+                ) : (
+                  <div className="mt-1 flex items-center gap-2">
+                    <h2 className="min-w-0 break-words text-2xl font-bold">
+                      {selected.name}
+                    </h2>
+                    <button
+                      type="button"
+                      title="Edit project name"
+                      aria-label="Edit project name"
+                      className="shrink-0 p-1 text-zinc-500 hover:text-indigo-300"
+                      onClick={() => {
+                        setProjectNameDraft(selected.name);
+                        setEditingProjectName(true);
+                      }}
+                    >
+                      <Pencil size={15} />
+                    </button>
+                  </div>
+                )}
+                <button
+                  type="button"
+                  onClick={toggleProject}
+                  className={
+                    "mt-3 inline-flex items-center gap-1.5 rounded border px-2.5 py-1.5 text-xs font-semibold " +
+                    (selected.enabled
+                      ? "border-emerald-500/40 text-emerald-300 hover:bg-emerald-500/10"
+                      : "border-amber-500/40 text-amber-300 hover:bg-amber-500/10")
+                  }
+                >
+                  <Power size={13} aria-hidden="true" />
+                  {selected.enabled ? "API enabled" : "API disabled"}
+                </button>
                 <div className="mt-4 rounded-lg border border-indigo-500/40 bg-indigo-500/10 p-4">
                   <p className="text-xs font-semibold uppercase tracking-wider text-indigo-300">
                     Your API endpoint URL
@@ -742,18 +884,26 @@ export default function Dashboard({ displayName }: { displayName: string }) {
                           <p className="muted text-xs font-semibold uppercase tracking-wider">
                             Response data
                           </p>
-                          <button
-                            type="button"
-                            onClick={() =>
-                              setEndpointDeleteTarget(selectedEndpoint)
-                            }
-                            title="Delete endpoint"
-                            aria-label="Delete endpoint"
-                            className="inline-flex items-center gap-1.5 rounded border border-red-900/70 px-2.5 py-1.5 text-xs text-red-300 hover:bg-red-950"
-                          >
-                            <Trash2 size={14} aria-hidden="true" />
-                            Delete
-                          </button>
+                          <div className="flex gap-2">
+                            <button
+                              type="button"
+                              onClick={() => toggleEndpoint(selectedEndpoint)}
+                              className="rounded border border-zinc-700 px-2.5 py-1.5 text-xs"
+                            >
+                              {selectedEndpoint.enabled ? "Disable" : "Enable"}
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() =>
+                                setEndpointDeleteTarget(selectedEndpoint)
+                              }
+                              title="Delete endpoint"
+                              aria-label="Delete endpoint"
+                              className="inline-flex items-center gap-1.5 rounded border border-red-900/70 px-2.5 py-1.5 text-xs text-red-300 hover:bg-red-950"
+                            >
+                              <Trash2 size={14} aria-hidden="true" /> Delete
+                            </button>
+                          </div>
                         </div>
                         <pre className="thin-scrollbar mt-2 max-h-72 overflow-auto rounded bg-zinc-950 p-3 text-xs text-zinc-300">
                           {JSON.stringify(
@@ -922,8 +1072,8 @@ export default function Dashboard({ displayName }: { displayName: string }) {
                 </div>
               </>
             ) : (
-              <div className="muted flex min-h-[520px] w-full items-center justify-center py-20 text-center">
-                <div className="mx-auto translate-y-8 rounded-2xl border border-dashed border-indigo-400/30 bg-indigo-500/5 px-8 py-10 text-center">
+              <div className="muted flex min-h-[420px] w-full items-center justify-center px-2 py-12 text-center sm:min-h-[520px] sm:py-20">
+                <div className="mx-auto w-full max-w-md rounded-2xl border border-dashed border-indigo-400/30 bg-indigo-500/5 px-5 py-8 text-center sm:px-8 sm:py-10">
                   Select a project to create and test endpoints.
                 </div>
               </div>

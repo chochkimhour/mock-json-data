@@ -1,14 +1,21 @@
 import { NextResponse } from "next/server";
 import { currentUser } from "@/lib/auth";
 import { db } from "@/lib/db";
+import { audit } from "@/lib/audit";
 
 async function ownedEndpoint(id: string, endpointId: string) {
   const user = await currentUser();
-  if (!user) return { error: NextResponse.json({ error: "Unauthorized" }, { status: 401 }) };
+  if (!user)
+    return {
+      error: NextResponse.json({ error: "Unauthorized" }, { status: 401 }),
+    };
   const endpoint = await db.endpoint.findFirst({
     where: { id: endpointId, project: { id, ownerId: user.id } },
   });
-  if (!endpoint) return { error: NextResponse.json({ error: "Not found" }, { status: 404 }) };
+  if (!endpoint)
+    return {
+      error: NextResponse.json({ error: "Not found" }, { status: 404 }),
+    };
   return { endpoint };
 }
 
@@ -40,10 +47,22 @@ export async function PATCH(
         path: body.path,
         statusCode: body.statusCode,
         responseBody: body.responseBody,
+        ...(typeof body.enabled === "boolean" ? { enabled: body.enabled } : {}),
       },
     });
+    const user = await currentUser();
+    if (user && typeof body.enabled === "boolean")
+      await audit(
+        user.id,
+        body.enabled ? "endpoint.enabled" : "endpoint.disabled",
+        values.id,
+        { endpointId: endpoint.id },
+      );
     return NextResponse.json(endpoint);
   } catch {
-    return NextResponse.json({ error: "An endpoint with that method and path already exists." }, { status: 409 });
+    return NextResponse.json(
+      { error: "An endpoint with that method and path already exists." },
+      { status: 409 },
+    );
   }
 }

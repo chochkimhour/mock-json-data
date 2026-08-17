@@ -5,7 +5,7 @@ import { renderTemplate } from "@/lib/templates";
 import { safeHeaders } from "@/lib/validation";
 import { schemaToZod } from "@/lib/schema";
 import { rateLimit } from "@/lib/rate-limit";
-import { hashApiKey } from "@/lib/api-key";
+import { API_KEY_TTL_MS, hashApiKey } from "@/lib/api-key";
 type RuntimeScenario = {
   slug: string;
   isDefault: boolean;
@@ -82,6 +82,7 @@ async function handle(
     select: {
       id: true,
       visibility: true,
+      enabled: true,
       expiresAt: true,
       logRequestBodies: true,
       owner: {
@@ -120,7 +121,7 @@ async function handle(
       },
     },
   });
-  if (!project || project.visibility !== "PUBLIC")
+  if (!project || project.visibility !== "PUBLIC" || !project.enabled)
     return jsonEnvelope(null, 404, "Mock project not found");
   if (project.expiresAt && project.expiresAt <= new Date()) {
     await db.project.delete({ where: { id: project.id } });
@@ -134,11 +135,12 @@ async function handle(
     !project.owner.apiKeyHash ||
     project.owner.apiKeyRevokedAt ||
     !project.owner.apiKeyCreatedAt ||
-    project.owner.apiKeyCreatedAt.getTime() + 7 * 24 * 60 * 60 * 1000 <=
-      Date.now() ||
+    project.owner.apiKeyCreatedAt.getTime() + API_KEY_TTL_MS <= Date.now() ||
     hashApiKey(suppliedKey) !== project.owner.apiKeyHash
   )
     return jsonEnvelope(null, 401, "A valid API key is required");
+  if (!rateLimit(`public:key:${project.id}:${hashApiKey(suppliedKey)}`, 300, 60_000).allowed)
+    return jsonEnvelope(null, 429, "API key rate limit exceeded. Try again shortly.");
   const endpoints = project.endpoints as RuntimeEndpoint[];
   const urlPath = "/" + path.join("/");
   const method = request.method;

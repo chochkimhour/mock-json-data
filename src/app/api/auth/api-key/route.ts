@@ -1,8 +1,9 @@
 import { NextResponse } from "next/server";
 import { currentUser } from "@/lib/auth";
 import { db } from "@/lib/db";
-import { createApiKey } from "@/lib/api-key";
+import { API_KEY_TTL_MS, createApiKey } from "@/lib/api-key";
 import { decryptApiKey, encryptApiKey } from "@/lib/api-key-crypto";
+import { audit } from "@/lib/audit";
 
 export async function GET() {
   const user = await currentUser();
@@ -28,7 +29,7 @@ export async function POST() {
   for (let attempt = 0; attempt < 5; attempt++) {
     const apiKey = createApiKey();
     const createdAt = new Date();
-    const expiresAt = new Date(createdAt.getTime() + 7 * 24 * 60 * 60 * 1000);
+    const expiresAt = new Date(createdAt.getTime() + API_KEY_TTL_MS);
     try {
       await db.user.update({
         where: { id: user.id },
@@ -40,6 +41,7 @@ export async function POST() {
           apiKeyRevokedAt: null,
         },
       });
+      await audit(user.id, "api_key.created", undefined, { last4: apiKey.last4 });
       return NextResponse.json({ apiKey: apiKey.value, createdAt, expiresAt });
     } catch (error) {
       if (attempt === 4) throw error;
@@ -64,5 +66,6 @@ export async function DELETE() {
       apiKeyRevokedAt: new Date(),
     },
   });
+  await audit(user.id, "api_key.revoked");
   return NextResponse.json({ ok: true });
 }
