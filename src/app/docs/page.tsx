@@ -124,12 +124,13 @@ X-API-Key: mjd_your_api_key
           <p className="muted mt-2 text-sm leading-6">
             Generate one key from the dashboard workspace panel. The same key
             protects every API you create, so unknown users cannot access your
-            mock data.
+            mock data. Send it with every public request.
           </p>
           <pre className="mt-4 overflow-x-auto rounded-lg bg-zinc-950 p-4 text-xs leading-6 text-emerald-300">{`curl https://your-domain.com/api/sms-a9dhds/users \\\n  -H "X-API-Key: mjd_your_api_key"`}</pre>
           <p className="muted mt-3 text-xs leading-5">
             You can also use <code>Authorization: Bearer mjd_your_api_key</code>
-            . Requests without a valid key return <code>401</code>.
+            . Header names are case-insensitive, but the API-key value is
+            case-sensitive. Requests without a valid key return <code>401</code>.
           </p>
         </section>
         <div className="mt-10 grid gap-4 sm:grid-cols-2">
@@ -144,7 +145,9 @@ X-API-Key: mjd_your_api_key
             </h2>
             <p className="muted mt-2 text-sm leading-6">
               Switch responses with <code>?scenario=empty</code> or the{" "}
-              <code>X-Mock-Scenario</code> header.
+              <code>X-Mock-Scenario</code> header. Mock responses can include
+              dynamic values such as UUIDs, dates, request fields, route
+              parameters, and query values.
             </p>
           </section>
           <section className="panel p-5">
@@ -157,8 +160,8 @@ X-API-Key: mjd_your_api_key
               API key security
             </h2>
             <p className="muted mt-2 text-sm leading-6">
-              Generate one key per user and send it with every request using
-              X-API-Key or Bearer authentication.
+              Generate one key per user and send it with every public request
+              using X-API-Key or Bearer authentication.
             </p>
           </section>
           <section className="panel p-5">
@@ -196,6 +199,20 @@ X-API-Key: mjd_your_api_key
             </h2>
             <p className="muted mt-2 text-sm leading-6">
               Mock APIs are automatically deleted 30 days after creation.
+            </p>
+          </section>
+          <section className="panel p-5">
+            <h2 className="flex items-center gap-2 font-semibold">
+              <ListChecks
+                size={16}
+                className="text-violet-300"
+                aria-hidden="true"
+              />
+              Request logs
+            </h2>
+            <p className="muted mt-2 text-sm leading-6">
+              Review recent requests, response statuses, latency, and the
+              endpoint that was called from your dashboard.
             </p>
           </section>
         </div>

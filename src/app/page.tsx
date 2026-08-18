@@ -47,7 +47,7 @@ export default function Home() {
           </h1>
           <p className="muted mt-5 max-w-lg text-base leading-7 sm:text-lg">
             Design, test, and share realistic GET API mocks in seconds—with
-            custom JSON responses, scenarios, validation, and a live URL.
+            custom JSON responses, scenarios, templates, and a live URL.
           </p>
           <div className="mt-5 flex max-w-lg items-start gap-2.5 border-l-2 border-orange-400/70 pl-3 text-xs leading-5 text-zinc-400">
             <Clock3
@@ -103,9 +103,9 @@ export default function Home() {
           Call your mock API in seconds.
         </h2>
         <p className="muted mt-2 max-w-2xl text-sm leading-6">
-          Generate one API key in your dashboard and send it with every request.
-          Your key protects all of your APIs and keeps unknown users from
-          accessing your mock data.
+          Generate one API key in your dashboard and send it with every public
+          request. Your key protects all of your APIs and keeps unknown users
+          from accessing your mock data.
         </p>
         <code className="home-security-code mt-4 block overflow-x-auto rounded-lg bg-zinc-950 p-3 text-xs text-emerald-300">
           X-API-Key: mjd_your_api_key
@@ -116,8 +116,8 @@ export default function Home() {
           ["Real endpoints", "Call your mocks from any HTTP client."],
           ["Scenarios", "Switch behaviour with a header or query parameter."],
           [
-            "Stateful data",
-            "Build believable CRUD flows with resettable data.",
+            "Dynamic responses",
+            "Use templates for UUIDs, dates, request fields, and query values.",
           ],
         ].map(([title, text]) => (
           <article className="panel p-5" key={title}>

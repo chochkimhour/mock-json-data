@@ -5,7 +5,7 @@
 ![Vercel](https://img.shields.io/badge/Vercel-Ready-000000?logo=vercel&logoColor=white)
 ![License](https://img.shields.io/badge/License-MIT-green)
 
-Create realistic GET API mocks before your backend is ready. Organize resources in one API, return custom JSON, and share a protected public endpoint.
+Create realistic GET API mocks before your backend is ready. Organize resources in one API, return custom JSON, and share protected public endpoints.
 
 Built with Next.js App Router, Prisma, PostgreSQL, Zod, and Tailwind CSS.
 
@@ -71,7 +71,7 @@ Never commit .env. Keep .env.example safe for GitHub.
 4. Add a GET endpoint such as `/users` or `/users/:id`.
 5. Add custom JSON response data and copy the public URL.
 
-Public URLs use this format:
+Public URLs use this format (using your API slug):
 
     https://your-domain.com/api/sms-a9dhds/users
 
@@ -87,11 +87,11 @@ In the request **Headers** tab, add:
 | ----------- | ------------------ |
 | `X-API-Key` | `mjd_your_api_key` |
 
-For an API with no matching endpoint, the server returns a JSON `404` response. The API key is required for every public request. You can also use:
+For an API with no matching endpoint, the server returns a JSON `404` response. The API key is required for every public request. Header names are case-insensitive, so `X-API-Key` and `x-api-key` are equivalent; the API-key value itself is case-sensitive. You can also use:
 
     Authorization: Bearer mjd_your_api_key
 
-Every request requires the user API key:
+Every public request requires the user API key:
 
     X-API-Key: mjd_your_api_key
 
