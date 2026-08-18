@@ -1,11 +1,11 @@
 import Link from "next/link";
 import {
+  ArrowRight,
   BookOpen,
   Clock3,
   Layers3,
   ListTree,
   LogIn,
-  Plus,
   ShieldCheck,
 } from "lucide-react";
 import ThemeToggle from "./theme-toggle";
@@ -37,7 +37,7 @@ export default function Home() {
           </Link>
         </div>
       </nav>
-      <section className="grid flex-1 items-center gap-8 py-8 sm:gap-10 sm:py-14 lg:grid-cols-[1.08fr_.92fr] lg:gap-16 lg:py-20">
+      <section className="grid flex-1 items-center gap-8 py-8 sm:gap-10 sm:py-14 lg:grid-cols-[.92fr_1.08fr] lg:gap-12 lg:py-20">
         <div>
           <p className="mb-4 text-sm font-semibold text-indigo-400">
             Developer-first mock APIs
@@ -67,8 +67,8 @@ export default function Home() {
               className="btn inline-flex items-center gap-1.5"
               href="/login"
             >
-              <Plus size={15} aria-hidden="true" />
-              Create a Mock API
+              <ArrowRight size={15} aria-hidden="true" />
+              Let&apos;s start
             </Link>
             <Link
               className="docs-link rounded-md border border-zinc-700 px-4 py-2 text-sm transition"
@@ -78,7 +78,7 @@ export default function Home() {
             >
               <span className="inline-flex items-center gap-1.5">
                 <BookOpen size={15} aria-hidden="true" />
-                Explore documentation
+                Documentation
               </span>
             </Link>
           </div>
@@ -87,7 +87,7 @@ export default function Home() {
           <div className="border-b border-zinc-800 px-5 py-3 text-xs font-semibold uppercase tracking-wider text-indigo-300">
             Request → response
           </div>
-          <pre className="max-w-full overflow-hidden whitespace-pre-wrap break-words p-6 text-sm leading-6 text-emerald-300">{`GET /api/sms-a9dhds/users\nX-API-Key: mjd_your_api_key\n\n{\n  "status": 200,\n  "success": true,\n  "message": "Request successful",\n  "data": {},\n  "timestamp": "{{datetime}}"\n}`}</pre>
+          <pre className="max-w-full overflow-x-auto whitespace-pre p-6 text-sm leading-6 text-emerald-300">{`GET https://mock-json-data.vercel.app/api/demo-123456\nX-API-Key: mjd_your_api_key\n\n{\n  "status": 200,\n  "success": true,\n  "message": "Request successful",\n  "data": {},\n  "timestamp": "{{datetime}}"\n}`}</pre>
         </div>
       </section>
       <section className="home-security-card mb-12 rounded-2xl border border-zinc-800 bg-zinc-900/50 p-5 sm:p-6">

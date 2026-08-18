@@ -96,7 +96,7 @@ export default function Docs() {
           <p className="muted mt-2 text-sm leading-6">
             Your endpoint URL follows this format:
           </p>
-          <pre className="panel mt-4 overflow-hidden whitespace-pre-wrap break-words p-5 text-sm leading-7 text-emerald-300">{`GET /api/sms-a9dhds/users
+          <pre className="panel mt-4 overflow-hidden whitespace-pre-wrap break-words p-5 text-sm leading-7 text-emerald-300">{`GET https://mock-json-data.vercel.app/api/demo-123456
 
 X-API-Key: mjd_your_api_key
 
@@ -126,7 +126,7 @@ X-API-Key: mjd_your_api_key
             protects every API you create, so unknown users cannot access your
             mock data. Send it with every public request.
           </p>
-          <pre className="mt-4 overflow-x-auto rounded-lg bg-zinc-950 p-4 text-xs leading-6 text-emerald-300">{`curl https://your-domain.com/api/sms-a9dhds/users \\\n  -H "X-API-Key: mjd_your_api_key"`}</pre>
+          <pre className="mt-4 overflow-x-auto rounded-lg bg-zinc-950 p-4 text-xs leading-6 text-emerald-300">{`curl https://mock-json-data.vercel.app/api/demo-123456 \\\n  -H "X-API-Key: mjd_your_api_key"`}</pre>
           <p className="muted mt-3 text-xs leading-5">
             You can also use <code>Authorization: Bearer mjd_your_api_key</code>
             . Header names are case-insensitive, but the API-key value is
