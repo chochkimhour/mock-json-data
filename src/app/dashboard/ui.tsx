@@ -970,7 +970,7 @@ export default function Dashboard({ displayName }: { displayName: string }) {
                         >
                           <span className="inline-flex items-center gap-1.5">
                             <Plus size={14} aria-hidden="true" />
-                            New endpoint
+                            New
                           </span>
                         </button>
                       )}
@@ -1098,11 +1098,11 @@ export default function Dashboard({ displayName }: { displayName: string }) {
                     <button className="btn inline-flex items-center justify-center gap-1.5">
                       {selectedEndpoint ? (
                         <>
-                          <Save size={15} aria-hidden="true" /> Update endpoint
+                          <Save size={15} aria-hidden="true" /> Update
                         </>
                       ) : (
                         <>
-                          <Plus size={15} aria-hidden="true" /> Add endpoint
+                          <Plus size={15} aria-hidden="true" /> Add
                         </>
                       )}
                     </button>
