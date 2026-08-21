@@ -63,6 +63,7 @@ function resourceName(path: string) {
 export default function Dashboard({ displayName }: { displayName: string }) {
   const [projects, setProjects] = useState<Project[]>([]),
     [projectsLoading, setProjectsLoading] = useState(true),
+    [apiKeyLoading, setApiKeyLoading] = useState(true),
     [apiKey, setApiKey] = useState<string | null>(null),
     [apiKeyExpiresAt, setApiKeyExpiresAt] = useState<string | null>(null),
     [health, setHealth] = useState<"healthy" | "slow" | "error">("healthy"),
@@ -91,6 +92,7 @@ export default function Dashboard({ displayName }: { displayName: string }) {
   const load = async () => {
     const started = performance.now();
     setProjectsLoading(true);
+    setApiKeyLoading(true);
     try {
       const [response, keyResponse] = await Promise.all([
         fetch("/api/projects", { cache: "no-store" }),
@@ -118,6 +120,7 @@ export default function Dashboard({ displayName }: { displayName: string }) {
       setMessage("Could not load workspace data.");
     } finally {
       setProjectsLoading(false);
+      setApiKeyLoading(false);
     }
   };
   useEffect(() => {
@@ -528,36 +531,61 @@ export default function Dashboard({ displayName }: { displayName: string }) {
                 </p>
               )}
               <div className="mt-2 min-w-0 max-w-full overflow-hidden">
-                <code className="block min-w-0 max-w-full overflow-hidden text-ellipsis whitespace-nowrap text-xs text-amber-100">
-                  {apiKey
-                    ? showApiKey && apiKey.includes("••••")
-                      ? apiKey
-                      : showApiKey
-                        ? apiKey
-                        : "*".repeat(apiKey.length)
-                    : "No API key"}
+                <code className="flex w-full min-w-0 max-w-full items-center gap-1.5 overflow-hidden text-xs text-amber-100">
+                  {apiKeyLoading ? (
+                    <>
+                      <RefreshCw
+                        className="shrink-0 animate-spin text-amber-300"
+                        size={12}
+                        aria-hidden="true"
+                      />
+                      <span className="truncate">Loading API key…</span>
+                    </>
+                  ) : (
+                    <span className="block min-w-0 truncate">
+                      {apiKey
+                        ? showApiKey && apiKey.includes("••••")
+                          ? apiKey
+                          : showApiKey
+                            ? apiKey
+                            : "*".repeat(apiKey.length)
+                        : "No API key"}
+                    </span>
+                  )}
                 </code>
               </div>
               <div className="mt-2 flex flex-wrap items-center gap-2">
                 <button
                   type="button"
-                  className="inline-flex shrink-0 items-center gap-1 border border-amber-500/40 px-2 py-1 text-xs"
+                  disabled={apiKeyLoading}
+                  className="inline-flex shrink-0 items-center gap-1 border border-amber-500/40 px-2 py-1 text-xs disabled:cursor-wait disabled:opacity-60"
                   onClick={async () => {
-                    const response = await fetch("/api/auth/api-key", {
-                      method: "POST",
-                    });
-                    if (!response.ok) {
-                      const body = await response.json().catch(() => null);
-                      setMessage(body?.error ?? "Could not generate API key.");
-                      return;
+                    setApiKeyLoading(true);
+                    try {
+                      const response = await fetch("/api/auth/api-key", {
+                        method: "POST",
+                      });
+                      if (!response.ok) {
+                        const body = await response.json().catch(() => null);
+                        setMessage(
+                          body?.error ?? "Could not generate API key.",
+                        );
+                        return;
+                      }
+                      const generated = await response.json();
+                      setApiKey(generated.apiKey);
+                      setApiKeyExpiresAt(generated.expiresAt);
+                      await load();
+                      setApiKey(generated.apiKey);
+                      setApiKeyExpiresAt(generated.expiresAt);
+                      setMessage("API key generated.");
+                    } catch {
+                      setMessage(
+                        "Could not generate API key. Check your connection.",
+                      );
+                    } finally {
+                      setApiKeyLoading(false);
                     }
-                    const generated = await response.json();
-                    setApiKey(generated.apiKey);
-                    setApiKeyExpiresAt(generated.expiresAt);
-                    await load();
-                    setApiKey(generated.apiKey);
-                    setApiKeyExpiresAt(generated.expiresAt);
-                    setMessage("API key generated.");
                   }}
                 >
                   <KeyRound size={13} />
@@ -1155,8 +1183,8 @@ export default function Dashboard({ displayName }: { displayName: string }) {
                 </div>
               </>
             ) : (
-              <div className="muted flex min-h-[420px] w-full items-center justify-center px-2 py-12 text-center sm:min-h-[520px] sm:py-20">
-                <div className="mx-auto w-full max-w-md rounded-2xl border border-dashed border-indigo-400/30 bg-indigo-500/5 px-5 py-8 text-center sm:px-8 sm:py-10">
+              <div className="muted flex h-full min-h-[420px] w-full items-center justify-center px-2 py-12 text-center sm:min-h-[520px] sm:py-20">
+                <div className="flex w-full max-w-md items-center justify-center rounded-2xl border border-dashed border-indigo-400/30 bg-indigo-500/5 px-5 py-8 text-center sm:px-8 sm:py-10">
                   Select a project to create and test endpoints.
                 </div>
               </div>
