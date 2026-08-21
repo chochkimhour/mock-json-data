@@ -15,23 +15,35 @@ export async function GET() {
   const user = await currentUser();
   if (!user)
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  await db.project.deleteMany({ where: { expiresAt: { lt: new Date() } } });
-  return NextResponse.json(
-    await db.project.findMany({
-      where: { ownerId: user.id },
-      include: {
-        owner: {
-          select: {
-            apiKeyLast4: true,
-            apiKeyCreatedAt: true,
-            apiKeyRevokedAt: true,
-          },
+  const projects = await db.project.findMany({
+    where: {
+      ownerId: user.id,
+      OR: [{ expiresAt: null }, { expiresAt: { gte: new Date() } }],
+    },
+    select: {
+      id: true,
+      publicId: true,
+      slug: true,
+      name: true,
+      description: true,
+      visibility: true,
+      enabled: true,
+      updatedAt: true,
+      expiresAt: true,
+      owner: {
+        select: {
+          apiKeyLast4: true,
+          apiKeyCreatedAt: true,
+          apiKeyRevokedAt: true,
         },
-        _count: { select: { endpoints: true, logs: true } },
       },
-      orderBy: { updatedAt: "desc" },
-    }),
-  );
+      _count: { select: { endpoints: true, logs: true } },
+    },
+    orderBy: { updatedAt: "desc" },
+  });
+  return NextResponse.json(projects, {
+    headers: { "Cache-Control": "private, no-store" },
+  });
 }
 export async function POST(req: NextRequest) {
   const user = await currentUser();

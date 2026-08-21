@@ -139,8 +139,18 @@ async function handle(
     hashApiKey(suppliedKey) !== project.owner.apiKeyHash
   )
     return jsonEnvelope(null, 401, "A valid API key is required");
-  if (!rateLimit(`public:key:${project.id}:${hashApiKey(suppliedKey)}`, 300, 60_000).allowed)
-    return jsonEnvelope(null, 429, "API key rate limit exceeded. Try again shortly.");
+  if (
+    !rateLimit(
+      `public:key:${project.id}:${hashApiKey(suppliedKey)}`,
+      300,
+      60_000,
+    ).allowed
+  )
+    return jsonEnvelope(
+      null,
+      429,
+      "API key rate limit exceeded. Try again shortly.",
+    );
   const endpoints = project.endpoints as RuntimeEndpoint[];
   const urlPath = "/" + path.join("/");
   const method = request.method;

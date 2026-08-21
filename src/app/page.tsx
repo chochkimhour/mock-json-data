@@ -7,6 +7,7 @@ import {
   ListTree,
   LogIn,
   ShieldCheck,
+  Sparkles,
 } from "lucide-react";
 import ThemeToggle from "./theme-toggle";
 import Typewriter from "./typewriter";
@@ -128,10 +129,16 @@ export default function Home() {
                   className="text-indigo-300"
                   aria-hidden="true"
                 />
-              ) : (
+              ) : title === "Scenarios" ? (
                 <Layers3
                   size={16}
                   className="text-indigo-300"
+                  aria-hidden="true"
+                />
+              ) : (
+                <Sparkles
+                  size={16}
+                  className="text-amber-300"
                   aria-hidden="true"
                 />
               )}

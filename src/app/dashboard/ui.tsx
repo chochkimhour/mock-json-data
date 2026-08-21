@@ -88,11 +88,12 @@ export default function Dashboard({ displayName }: { displayName: string }) {
   const load = async () => {
     const started = performance.now();
     try {
-      const response = await fetch("/api/projects");
+      const [response, keyResponse] = await Promise.all([
+        fetch("/api/projects", { cache: "no-store" }),
+        fetch("/api/auth/api-key", { cache: "no-store" }),
+      ]);
       if (!response.ok) throw new Error("Could not load projects");
-      const data = await response.json();
-      setProjects(data);
-      const keyResponse = await fetch("/api/auth/api-key");
+      setProjects(await response.json());
       const keyData = keyResponse.ok ? await keyResponse.json() : null;
       if (keyData?.apiKey) {
         setApiKey(keyData.apiKey);
@@ -150,9 +151,19 @@ export default function Dashboard({ displayName }: { displayName: string }) {
       setSelectedEndpoint(null);
       return;
     }
-    fetch("/api/projects/" + selected.id + "/endpoints")
+    const controller = new AbortController();
+    fetch("/api/projects/" + selected.id + "/endpoints", {
+      signal: controller.signal,
+      cache: "no-store",
+    })
       .then((response) => response.json())
-      .then((data) => setEndpoints(Array.isArray(data) ? data : []));
+      .then((data) => setEndpoints(Array.isArray(data) ? data : []))
+      .catch((error: unknown) => {
+        if (error instanceof DOMException && error.name === "AbortError")
+          return;
+        setMessage("Could not load endpoints.");
+      });
+    return () => controller.abort();
   }, [selected]);
   useEffect(() => {
     if (!responseRef.current) return;
