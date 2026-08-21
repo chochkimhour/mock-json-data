@@ -21,7 +21,7 @@ const steps = [
   ],
   [
     "03",
-    "Call the protected URL",
+    "Call your protected endpoint",
     "Use the highlighted /api/{your-api}/... URL with your X-API-Key header.",
   ],
 ];
@@ -90,14 +90,13 @@ export default function Docs() {
 
         <section className="mt-12">
           <h2 className="flex items-center gap-2 text-xl font-semibold">
-            <Route size={19} className="text-indigo-300" aria-hidden="true" />A
-            simple request
+            <Route size={19} className="text-indigo-300" aria-hidden="true" />
+            Make a request
           </h2>
           <p className="muted mt-2 text-sm leading-6">
             Your endpoint URL follows this format:
           </p>
           <pre className="panel mt-4 max-w-full overflow-x-auto whitespace-pre p-5 text-sm leading-7 text-emerald-300">{`GET https://mock-json-data.vercel.app/api/demo-123456
-
 X-API-Key: mjd_your_api_key
 
 {
@@ -122,15 +121,16 @@ X-API-Key: mjd_your_api_key
             Use your API key on every request
           </h2>
           <p className="muted mt-2 text-sm leading-6">
-            Generate one key from the dashboard workspace panel. The same key
-            protects every API you create, so unknown users cannot access your
-            mock data. Send it with every public request.
+            Create an API key in the dashboard workspace panel. The same key
+            protects every API you create. Include it with every public request
+            to keep your mock data private.
           </p>
           <pre className="mt-4 overflow-x-auto rounded-lg bg-zinc-950 p-4 text-xs leading-6 text-emerald-300">{`curl https://mock-json-data.vercel.app/api/demo-123456 \\\n  -H "X-API-Key: mjd_your_api_key"`}</pre>
           <p className="muted mt-3 text-xs leading-5">
             You can also use <code>Authorization: Bearer mjd_your_api_key</code>
             . Header names are case-insensitive, but the API-key value is
-            case-sensitive. Requests without a valid key return <code>401</code>.
+            case-sensitive. Requests without a valid key return <code>401</code>
+            .
           </p>
         </section>
         <div className="mt-10 grid gap-4 sm:grid-cols-2">
@@ -198,7 +198,7 @@ X-API-Key: mjd_your_api_key
               30-day retention
             </h2>
             <p className="muted mt-2 text-sm leading-6">
-              Mock APIs expire and are removed after 30 days.
+              Mock APIs are automatically removed after 30 days.
             </p>
           </section>
           <section className="panel p-5">

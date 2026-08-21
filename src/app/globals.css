@@ -19,6 +19,7 @@
   }
   body {
     @apply bg-zinc-950 text-zinc-100 antialiased transition-colors;
+    color-scheme: dark;
     overflow-x: hidden;
     overflow-y: auto;
     letter-spacing: -0.01em;
@@ -85,6 +86,7 @@ footer.text-zinc-500 {
 }
 body.light {
   @apply bg-stone-50 text-zinc-900;
+  color-scheme: light;
 }
 body.light:before {
   opacity: 0.18;
@@ -121,6 +123,16 @@ body.light .endpoint-row {
 }
 body.light .endpoint-selected {
   @apply border-l-emerald-500 bg-emerald-50;
+}
+.endpoint-count {
+  border-color: rgba(129, 140, 248, 0.35);
+  background: rgba(99, 102, 241, 0.1);
+  color: #c7d2fe;
+}
+body.light .endpoint-count {
+  border-color: #c7d2fe;
+  background: #eef2ff;
+  color: #4338ca;
 }
 body.light .back-to-top {
   color: #4338ca;

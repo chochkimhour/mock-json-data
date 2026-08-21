@@ -47,8 +47,15 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en">
-      <body>{children}</body>
+    <html lang="en" suppressHydrationWarning>
+      <body>
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `try{if(localStorage.getItem("mock-json-theme")==="light"){document.body.classList.add("light")}}catch{}`,
+          }}
+        />
+        {children}
+      </body>
     </html>
   );
 }

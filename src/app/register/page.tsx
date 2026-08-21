@@ -21,7 +21,7 @@ export default function Register() {
       <div className="w-full max-w-md">
         <h1 className="text-center text-3xl font-bold">Create your account</h1>
         <p className="muted mt-2 text-center">
-          Get a live mock endpoint in minutes.
+          Create your first mock API in minutes.
         </p>
         <form
           onSubmit={submit}

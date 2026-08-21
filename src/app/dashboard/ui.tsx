@@ -24,7 +24,6 @@ import {
   Braces,
   X,
 } from "lucide-react";
-import { API_KEY_TTL_MS } from "@/lib/api-key";
 type Project = {
   id: string;
   publicId: string;
@@ -65,7 +64,6 @@ export default function Dashboard({ displayName }: { displayName: string }) {
     [projectsLoading, setProjectsLoading] = useState(true),
     [apiKeyLoading, setApiKeyLoading] = useState(true),
     [apiKey, setApiKey] = useState<string | null>(null),
-    [apiKeyExpiresAt, setApiKeyExpiresAt] = useState<string | null>(null),
     [health, setHealth] = useState<"healthy" | "slow" | "error">("healthy"),
     [name, setName] = useState(""),
     [projectSearch, setProjectSearch] = useState(""),
@@ -103,16 +101,8 @@ export default function Dashboard({ displayName }: { displayName: string }) {
       const keyData = keyResponse.ok ? await keyResponse.json() : null;
       if (keyData?.apiKey) {
         setApiKey(keyData.apiKey);
-        setApiKeyExpiresAt(
-          keyData.createdAt
-            ? new Date(
-                new Date(keyData.createdAt).getTime() + API_KEY_TTL_MS,
-              ).toISOString()
-            : null,
-        );
       } else {
         setApiKey(null);
-        setApiKeyExpiresAt(null);
       }
       setHealth(performance.now() - started > 1500 ? "slow" : "healthy");
     } catch {
@@ -426,7 +416,7 @@ export default function Dashboard({ displayName }: { displayName: string }) {
                   ? "Switch to light mode"
                   : "Switch to dark mode"
               }
-              className="border border-zinc-700 p-2"
+              className="rounded-full border border-zinc-700 p-2"
             >
               {theme === "dark" ? <Sun size={16} /> : <Moon size={16} />}
             </button>
@@ -512,8 +502,8 @@ export default function Dashboard({ displayName }: { displayName: string }) {
                 </span>
                 <p className="min-w-0 overflow-x-auto whitespace-nowrap text-[11px]">
                   <span className="font-semibold text-amber-300">Note</span>
-                  <span className="mx-1 text-amber-500/60">·</span>APIs expire
-                  after 30 days.
+                  <span className="mx-1 text-amber-500/60">·</span>APIs are
+                  retained for 30 days.
                 </p>
               </div>
             </div>
@@ -525,11 +515,6 @@ export default function Dashboard({ displayName }: { displayName: string }) {
               <p className="muted mt-1 text-xs">
                 Use this key for all your mock APIs.
               </p>
-              {apiKeyExpiresAt && (
-                <p className="mt-1 text-[11px] text-amber-800 dark:text-amber-200">
-                  Expires {new Date(apiKeyExpiresAt).toLocaleDateString()}
-                </p>
-              )}
               <div className="mt-2 min-w-0 max-w-full overflow-hidden">
                 <code className="flex w-full min-w-0 max-w-full items-center gap-1.5 overflow-hidden text-xs text-amber-100">
                   {apiKeyLoading ? (
@@ -574,10 +559,8 @@ export default function Dashboard({ displayName }: { displayName: string }) {
                       }
                       const generated = await response.json();
                       setApiKey(generated.apiKey);
-                      setApiKeyExpiresAt(generated.expiresAt);
                       await load();
                       setApiKey(generated.apiKey);
-                      setApiKeyExpiresAt(generated.expiresAt);
                       setMessage("API key generated.");
                     } catch {
                       setMessage(
@@ -850,7 +833,7 @@ export default function Dashboard({ displayName }: { displayName: string }) {
                           Endpoints are grouped by their first URL segment.
                         </p>
                       </div>
-                      <span className="muted text-sm">
+                      <span className="endpoint-count muted inline-flex items-center rounded-full border px-2.5 py-1 text-xs font-semibold">
                         {endpoints.length} endpoint
                         {endpoints.length === 1 ? "" : "s"}
                       </span>
@@ -1343,7 +1326,6 @@ export default function Dashboard({ displayName }: { displayName: string }) {
                   });
                   setConfirmApiKeyDelete(false);
                   setApiKey(null);
-                  setApiKeyExpiresAt(null);
                   if (!response.ok) {
                     setMessage("Could not delete API key.");
                     return;
