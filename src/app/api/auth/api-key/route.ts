@@ -4,6 +4,7 @@ import { db } from "@/lib/db";
 import { API_KEY_TTL_MS, createApiKey } from "@/lib/api-key";
 import { decryptApiKey, encryptApiKey } from "@/lib/api-key-crypto";
 import { audit } from "@/lib/audit";
+import { csrfError } from "@/lib/csrf";
 
 export async function GET() {
   const user = await currentUser();
@@ -22,7 +23,9 @@ export async function GET() {
   });
 }
 
-export async function POST() {
+export async function POST(request: Request) {
+  const csrf = csrfError(request);
+  if (csrf) return csrf;
   const user = await currentUser();
   if (!user)
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
@@ -41,7 +44,9 @@ export async function POST() {
           apiKeyRevokedAt: null,
         },
       });
-      await audit(user.id, "api_key.created", undefined, { last4: apiKey.last4 });
+      await audit(user.id, "api_key.created", undefined, {
+        last4: apiKey.last4,
+      });
       return NextResponse.json({ apiKey: apiKey.value, createdAt, expiresAt });
     } catch (error) {
       if (attempt === 4) throw error;
@@ -53,7 +58,9 @@ export async function POST() {
   );
 }
 
-export async function DELETE() {
+export async function DELETE(request: Request) {
+  const csrf = csrfError(request);
+  if (csrf) return csrf;
   const user = await currentUser();
   if (!user)
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });

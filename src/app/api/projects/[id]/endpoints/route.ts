@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { currentUser } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { endpointInput } from "@/lib/validation";
+import { csrfError } from "@/lib/csrf";
 
 export async function GET(
   _request: NextRequest,
@@ -28,6 +29,8 @@ export async function POST(
   req: NextRequest,
   { params }: { params: Promise<{ id: string }> },
 ) {
+  const csrf = csrfError(req);
+  if (csrf) return csrf;
   const user = await currentUser();
   if (!user)
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
@@ -42,7 +45,10 @@ export async function POST(
       where: { id: input.endpointId, projectId: project.id },
     });
     if (!existing)
-      return NextResponse.json({ error: "Endpoint not found" }, { status: 404 });
+      return NextResponse.json(
+        { error: "Endpoint not found" },
+        { status: 404 },
+      );
     const updated = await db.endpoint.update({
       where: { id: existing.id },
       data: {

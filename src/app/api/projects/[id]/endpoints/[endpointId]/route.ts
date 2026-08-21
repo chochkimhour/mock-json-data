@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { currentUser } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { audit } from "@/lib/audit";
+import { csrfError } from "@/lib/csrf";
 
 async function ownedEndpoint(id: string, endpointId: string) {
   const user = await currentUser();
@@ -23,6 +24,8 @@ export async function DELETE(
   _request: Request,
   { params }: { params: Promise<{ id: string; endpointId: string }> },
 ) {
+  const csrf = csrfError(_request);
+  if (csrf) return csrf;
   const values = await params;
   const owned = await ownedEndpoint(values.id, values.endpointId);
   if ("error" in owned) return owned.error;
@@ -34,6 +37,8 @@ export async function PATCH(
   request: Request,
   { params }: { params: Promise<{ id: string; endpointId: string }> },
 ) {
+  const csrf = csrfError(request);
+  if (csrf) return csrf;
   const values = await params;
   const owned = await ownedEndpoint(values.id, values.endpointId);
   if ("error" in owned) return owned.error;

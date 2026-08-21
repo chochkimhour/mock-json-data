@@ -103,7 +103,7 @@ export default function Home() {
           />
           Call your mock API in seconds.
         </h2>
-        <p className="muted mt-2 max-w-2xl text-sm leading-6">
+        <p className="muted mt-2 max-w-none text-sm leading-6">
           Generate one API key in your dashboard and send it with every public
           request. Your key protects all of your APIs and keeps unknown users
           from accessing your mock data.

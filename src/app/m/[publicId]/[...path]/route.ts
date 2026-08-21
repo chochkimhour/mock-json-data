@@ -93,7 +93,9 @@ async function handle(
         },
       },
       endpoints: {
-        where: { enabled: true },
+        // Only load endpoints for the requested method; this avoids transferring
+        // unrelated response bodies on every public request.
+        where: { enabled: true, method: request.method as never },
         select: {
           id: true,
           method: true,
@@ -165,9 +167,11 @@ async function handle(
         x.params !== null,
     );
   if (!candidates.length) {
-    const anyPath = endpoints.some((e: RuntimeEndpoint) =>
-      matchPath(e.path, urlPath),
-    );
+    const allPaths = await db.endpoint.findMany({
+      where: { projectId: project.id, enabled: true },
+      select: { path: true },
+    });
+    const anyPath = allPaths.some((e) => matchPath(e.path, urlPath));
     const errorStatus = anyPath ? 405 : 404;
     return jsonEnvelope(
       null,

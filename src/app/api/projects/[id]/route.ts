@@ -3,6 +3,7 @@ import { currentUser } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { audit } from "@/lib/audit";
 import { randomBytes } from "crypto";
+import { csrfError } from "@/lib/csrf";
 
 function createSlugSuffix() {
   return randomBytes(4).toString("hex").slice(0, 6);
@@ -12,6 +13,8 @@ export async function PATCH(
   request: Request,
   { params }: { params: Promise<{ id: string }> },
 ) {
+  const csrf = csrfError(request);
+  if (csrf) return csrf;
   const user = await currentUser();
   if (!user)
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
@@ -61,9 +64,11 @@ export async function PATCH(
 }
 
 export async function DELETE(
-  _request: Request,
+  request: Request,
   { params }: { params: Promise<{ id: string }> },
 ) {
+  const csrf = csrfError(request);
+  if (csrf) return csrf;
   const user = await currentUser();
   if (!user)
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });

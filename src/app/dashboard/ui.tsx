@@ -8,6 +8,7 @@ import {
   Eye,
   EyeOff,
   FolderKanban,
+  FolderOpen,
   Info,
   KeyRound,
   LogOut,
@@ -61,6 +62,7 @@ function resourceName(path: string) {
 }
 export default function Dashboard({ displayName }: { displayName: string }) {
   const [projects, setProjects] = useState<Project[]>([]),
+    [projectsLoading, setProjectsLoading] = useState(true),
     [apiKey, setApiKey] = useState<string | null>(null),
     [apiKeyExpiresAt, setApiKeyExpiresAt] = useState<string | null>(null),
     [health, setHealth] = useState<"healthy" | "slow" | "error">("healthy"),
@@ -70,6 +72,7 @@ export default function Dashboard({ displayName }: { displayName: string }) {
     [editingProjectName, setEditingProjectName] = useState(false),
     [projectNameDraft, setProjectNameDraft] = useState(""),
     [endpoints, setEndpoints] = useState<Endpoint[]>([]),
+    [endpointsLoading, setEndpointsLoading] = useState(false),
     [resource, setResource] = useState<string | null>(null),
     [method, setMethod] = useState<string | null>(null),
     [selectedEndpoint, setSelectedEndpoint] = useState<Endpoint | null>(null),
@@ -87,6 +90,7 @@ export default function Dashboard({ displayName }: { displayName: string }) {
   const jsonFileRef = useRef<HTMLInputElement>(null);
   const load = async () => {
     const started = performance.now();
+    setProjectsLoading(true);
     try {
       const [response, keyResponse] = await Promise.all([
         fetch("/api/projects", { cache: "no-store" }),
@@ -112,6 +116,8 @@ export default function Dashboard({ displayName }: { displayName: string }) {
     } catch {
       setHealth("error");
       setMessage("Could not load workspace data.");
+    } finally {
+      setProjectsLoading(false);
     }
   };
   useEffect(() => {
@@ -149,9 +155,11 @@ export default function Dashboard({ displayName }: { displayName: string }) {
     if (!selected) {
       setEndpoints([]);
       setSelectedEndpoint(null);
+      setEndpointsLoading(false);
       return;
     }
     const controller = new AbortController();
+    setEndpointsLoading(true);
     fetch("/api/projects/" + selected.id + "/endpoints", {
       signal: controller.signal,
       cache: "no-store",
@@ -162,7 +170,8 @@ export default function Dashboard({ displayName }: { displayName: string }) {
         if (error instanceof DOMException && error.name === "AbortError")
           return;
         setMessage("Could not load endpoints.");
-      });
+      })
+      .finally(() => setEndpointsLoading(false));
     return () => controller.abort();
   }, [selected]);
   useEffect(() => {
@@ -190,6 +199,9 @@ export default function Dashboard({ displayName }: { displayName: string }) {
       setName("");
       void load();
       setMessage("Project created.");
+    } else {
+      const body = await r.json().catch(() => null);
+      setMessage(body?.error ?? "Could not create project.");
     }
   }
   async function endpoint(e: React.FormEvent<HTMLFormElement>) {
@@ -491,14 +503,14 @@ export default function Dashboard({ displayName }: { displayName: string }) {
               <p className="muted mt-2 text-xs">
                 Collections, resources, and routes
               </p>
-              <div className="mt-3 flex items-start gap-2 rounded-lg border border-amber-400/20 bg-amber-400/5 p-2.5 text-xs leading-5 text-amber-200">
-                <span className="mt-0.5 grid size-5 shrink-0 place-items-center rounded-full bg-amber-400/15 text-amber-300">
+              <div className="mt-3 flex items-center gap-2 rounded-lg border border-amber-400/20 bg-amber-400/5 p-2.5 text-xs leading-5 text-amber-200">
+                <span className="grid size-5 shrink-0 place-items-center rounded-full bg-amber-400/15 text-amber-300">
                   <Info size={12} aria-hidden="true" />
                 </span>
-                <p>
+                <p className="min-w-0 overflow-x-auto whitespace-nowrap text-[11px]">
                   <span className="font-semibold text-amber-300">Note</span>
-                  <span className="mx-1 text-amber-500/60">·</span>APIs are
-                  automatically deleted 30 days after creation.
+                  <span className="mx-1 text-amber-500/60">·</span>APIs expire
+                  after 30 days.
                 </p>
               </div>
             </div>
@@ -614,7 +626,17 @@ export default function Dashboard({ displayName }: { displayName: string }) {
               />
             )}
             <div className="thin-scrollbar project-list-scroll -my-2 mt-5 grid max-h-[620px] gap-3 overflow-y-auto px-1 py-2">
-              {projects.length === 0 && (
+              {projectsLoading && (
+                <div className="panel col-span-full w-full p-5 text-center">
+                  <RefreshCw
+                    className="mx-auto animate-spin text-indigo-300"
+                    size={18}
+                    aria-hidden="true"
+                  />
+                  <p className="muted mt-2 text-sm">Loading your APIs…</p>
+                </div>
+              )}
+              {!projectsLoading && projects.length === 0 && (
                 <div className="panel col-span-full w-full p-5">
                   <b>No APIs yet.</b>
                   <p className="muted mt-1 text-sm">
@@ -622,62 +644,65 @@ export default function Dashboard({ displayName }: { displayName: string }) {
                   </p>
                 </div>
               )}
-              {projects.length > 0 && filteredProjects.length === 0 && (
-                <div className="panel col-span-full w-full p-5 text-center">
-                  <b>No projects found.</b>
-                  <p className="muted mt-1 text-sm">
-                    Try a different project name.
-                  </p>
-                </div>
-              )}
-              {filteredProjects.map((p) => (
-                <div
-                  className={
-                    "panel project-card flex w-full min-w-0 items-center gap-3 p-3 hover:border-orange-500 " +
-                    (selected?.id === p.id
-                      ? "border-orange-500 bg-orange-500/10"
-                      : "")
-                  }
-                  key={p.id}
-                >
-                  <button
-                    onClick={() => {
-                      setSelected(p);
-                      setResource(null);
-                      setMethod(null);
-                      setSelectedEndpoint(null);
-                    }}
-                    className="min-w-0 flex-1 text-left focus:outline-none focus:ring-0"
-                  >
-                    <div className="flex min-w-0 items-center gap-2">
-                      <FolderKanban
-                        size={15}
-                        className="shrink-0 text-indigo-300"
-                        aria-hidden="true"
-                      />
-                      <b className="truncate">{p.name}</b>
-                    </div>
+              {!projectsLoading &&
+                projects.length > 0 &&
+                filteredProjects.length === 0 && (
+                  <div className="panel col-span-full w-full p-5 text-center">
+                    <b>No projects found.</b>
                     <p className="muted mt-1 text-sm">
-                      {p._count.endpoints} endpoint
-                      {p._count.endpoints === 1 ? "" : "s"}
+                      Try a different project name.
                     </p>
-                    <p className="muted mt-1 text-[11px]">
-                      Updated {new Date(p.updatedAt).toLocaleDateString()}
-                    </p>
-                  </button>
-                  <button
-                    type="button"
-                    title={"Delete " + p.name}
-                    aria-label={"Delete " + p.name}
-                    onClick={() => {
-                      setDeleteTarget(p);
-                    }}
-                    className="shrink-0 rounded p-2 text-zinc-500 hover:bg-red-950 hover:text-red-300"
+                  </div>
+                )}
+              {!projectsLoading &&
+                filteredProjects.map((p) => (
+                  <div
+                    className={
+                      "panel project-card flex w-full min-w-0 items-center gap-3 p-3 hover:border-orange-500 " +
+                      (selected?.id === p.id
+                        ? "border-orange-500 bg-orange-500/10"
+                        : "")
+                    }
+                    key={p.id}
                   >
-                    <Trash2 size={16} aria-hidden="true" />
-                  </button>
-                </div>
-              ))}
+                    <button
+                      onClick={() => {
+                        setSelected(p);
+                        setResource(null);
+                        setMethod(null);
+                        setSelectedEndpoint(null);
+                      }}
+                      className="min-w-0 flex-1 text-left focus:outline-none focus:ring-0"
+                    >
+                      <div className="flex min-w-0 items-center gap-2">
+                        <FolderOpen
+                          size={15}
+                          className="shrink-0 text-indigo-300"
+                          aria-hidden="true"
+                        />
+                        <b className="truncate">{p.name}</b>
+                      </div>
+                      <p className="muted mt-1 text-sm">
+                        {p._count.endpoints} endpoint
+                        {p._count.endpoints === 1 ? "" : "s"}
+                      </p>
+                      <p className="muted mt-1 text-[11px]">
+                        Updated {new Date(p.updatedAt).toLocaleDateString()}
+                      </p>
+                    </button>
+                    <button
+                      type="button"
+                      title={"Delete " + p.name}
+                      aria-label={"Delete " + p.name}
+                      onClick={() => {
+                        setDeleteTarget(p);
+                      }}
+                      className="shrink-0 rounded p-2 text-zinc-500 hover:bg-red-950 hover:text-red-300"
+                    >
+                      <Trash2 size={16} aria-hidden="true" />
+                    </button>
+                  </div>
+                ))}
             </div>
           </section>
           <section className="panel relative w-full min-h-0 min-w-0 p-4 sm:min-h-[620px] sm:p-6 lg:p-8">
@@ -860,7 +885,16 @@ export default function Dashboard({ displayName }: { displayName: string }) {
                       ))}
                     </div>
                     <div className="mt-4 overflow-hidden rounded-lg border border-zinc-800">
-                      {filteredEndpoints.length ? (
+                      {endpointsLoading ? (
+                        <div className="muted flex items-center justify-center gap-2 px-4 py-10 text-sm">
+                          <RefreshCw
+                            className="animate-spin text-indigo-300"
+                            size={16}
+                            aria-hidden="true"
+                          />
+                          Loading endpoints…
+                        </div>
+                      ) : filteredEndpoints.length ? (
                         filteredEndpoints.map((item) => (
                           <button
                             type="button"
@@ -1209,6 +1243,9 @@ export default function Dashboard({ displayName }: { displayName: string }) {
                     setDeleteTarget(null);
                     setMessage("API deleted.");
                     void load();
+                  } else {
+                    const body = await response.json().catch(() => null);
+                    setMessage(body?.error ?? "Could not delete API.");
                   }
                 }}
                 className="border border-red-500/60 bg-red-500/15 px-3 py-2 text-sm text-red-300 hover:bg-red-500/30"

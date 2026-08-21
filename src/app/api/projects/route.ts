@@ -3,6 +3,7 @@ import { currentUser } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { projectInput } from "@/lib/validation";
 import { randomInt } from "crypto";
+import { csrfError } from "@/lib/csrf";
 
 const shortIdAlphabet = "abcdefghijklmnopqrstuvwxyz0123456789";
 function createShortId(length = 6) {
@@ -46,6 +47,8 @@ export async function GET() {
   });
 }
 export async function POST(req: NextRequest) {
+  const csrf = csrfError(req);
+  if (csrf) return csrf;
   const user = await currentUser();
   if (!user)
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });

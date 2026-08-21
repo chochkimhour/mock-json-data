@@ -96,7 +96,7 @@ export default function Docs() {
           <p className="muted mt-2 text-sm leading-6">
             Your endpoint URL follows this format:
           </p>
-          <pre className="panel mt-4 overflow-hidden whitespace-pre-wrap break-words p-5 text-sm leading-7 text-emerald-300">{`GET https://mock-json-data.vercel.app/api/demo-123456
+          <pre className="panel mt-4 max-w-full overflow-x-auto whitespace-pre p-5 text-sm leading-7 text-emerald-300">{`GET https://mock-json-data.vercel.app/api/demo-123456
 
 X-API-Key: mjd_your_api_key
 
@@ -198,7 +198,7 @@ X-API-Key: mjd_your_api_key
               30-day retention
             </h2>
             <p className="muted mt-2 text-sm leading-6">
-              Mock APIs are automatically deleted 30 days after creation.
+              Mock APIs expire and are removed after 30 days.
             </p>
           </section>
           <section className="panel p-5">
